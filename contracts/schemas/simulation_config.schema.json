@@ -1,0 +1,42 @@
+{
+  "description": "Global parameters controlling a simulation run.",
+  "properties": {
+    "simulation_id": {
+      "default": "sim_default",
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "seed": {
+      "default": 42,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "territory_count": {
+      "default": 36,
+      "title": "Territory Count",
+      "type": "integer"
+    },
+    "nation_count": {
+      "default": 6,
+      "title": "Nation Count",
+      "type": "integer"
+    },
+    "ai_model": {
+      "default": "qwen3:8b",
+      "title": "Ai Model",
+      "type": "string"
+    },
+    "use_mock_agents": {
+      "default": true,
+      "title": "Use Mock Agents",
+      "type": "boolean"
+    },
+    "max_turns": {
+      "default": 200,
+      "title": "Max Turns",
+      "type": "integer"
+    }
+  },
+  "title": "SimulationConfig",
+  "type": "object"
+}

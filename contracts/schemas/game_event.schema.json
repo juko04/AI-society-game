@@ -1,0 +1,90 @@
+{
+  "description": "Significant world event recorded in the chronological event stream.",
+  "properties": {
+    "event_id": {
+      "description": "Unique event ID",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "turn": {
+      "description": "Simulation turn",
+      "title": "Turn",
+      "type": "integer"
+    },
+    "phase": {
+      "description": "Turn phase when event occurred",
+      "title": "Phase",
+      "type": "string"
+    },
+    "event_type": {
+      "description": "Type: claim, combat, trade, alliance, message, etc.",
+      "title": "Event Type",
+      "type": "string"
+    },
+    "summary": {
+      "description": "Spectator-facing summary sentence",
+      "title": "Summary",
+      "type": "string"
+    },
+    "source_nation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Initiating nation ID",
+      "title": "Source Nation Id"
+    },
+    "target_nation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Recipient or defending nation ID",
+      "title": "Target Nation Id"
+    },
+    "territory_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Relevant territory ID",
+      "title": "Territory Id"
+    },
+    "details": {
+      "additionalProperties": true,
+      "description": "Structured outcome data (dice, casualties, etc.)",
+      "title": "Details",
+      "type": "object"
+    },
+    "timestamp": {
+      "description": "ISO timestamp",
+      "title": "Timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "turn",
+    "phase",
+    "event_type",
+    "summary",
+    "timestamp"
+  ],
+  "title": "GameEvent",
+  "type": "object"
+}

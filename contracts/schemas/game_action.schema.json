@@ -1,0 +1,146 @@
+{
+  "description": "Represents a validated or pending strategic action submitted by a nation.",
+  "properties": {
+    "action_id": {
+      "description": "Unique action ID",
+      "title": "Action Id",
+      "type": "string"
+    },
+    "nation_id": {
+      "description": "Nation executing the action",
+      "title": "Nation Id",
+      "type": "string"
+    },
+    "action_type": {
+      "description": "Type of action",
+      "enum": [
+        "claim",
+        "recruit",
+        "develop",
+        "move",
+        "attack",
+        "transfer",
+        "trade",
+        "alliance",
+        "pass"
+      ],
+      "title": "Action Type",
+      "type": "string"
+    },
+    "target_territory_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Target territory for claim, develop, move, or attack",
+      "title": "Target Territory Id"
+    },
+    "origin_territory_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Origin territory for military movement or attack",
+      "title": "Origin Territory Id"
+    },
+    "target_nation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Target nation for transfers, trades, or treaties",
+      "title": "Target Nation Id"
+    },
+    "units_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Number of units committed to move or attack",
+      "title": "Units Count"
+    },
+    "gold_amount": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Gold involved in transfer or trade",
+      "title": "Gold Amount"
+    },
+    "food_amount": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Food involved in transfer or trade",
+      "title": "Food Amount"
+    },
+    "develop_target": {
+      "anyOf": [
+        {
+          "enum": [
+            "gold",
+            "food"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Resource to improve when developing",
+      "title": "Develop Target"
+    },
+    "reasoning_note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "AI reasoning summary for this action",
+      "title": "Reasoning Note"
+    }
+  },
+  "required": [
+    "action_id",
+    "nation_id",
+    "action_type"
+  ],
+  "title": "GameAction",
+  "type": "object"
+}

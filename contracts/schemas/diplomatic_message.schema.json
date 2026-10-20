@@ -1,0 +1,65 @@
+{
+  "description": "Natural-language communication between civilizations.",
+  "properties": {
+    "message_id": {
+      "description": "Unique message ID",
+      "title": "Message Id",
+      "type": "string"
+    },
+    "turn": {
+      "description": "Simulation turn when sent",
+      "title": "Turn",
+      "type": "integer"
+    },
+    "sender_id": {
+      "description": "Sending nation ID",
+      "title": "Sender Id",
+      "type": "string"
+    },
+    "recipient_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Target nation ID, or None if public announcement",
+      "title": "Recipient Id"
+    },
+    "is_private": {
+      "default": false,
+      "description": "True if private 1-on-1 message",
+      "title": "Is Private",
+      "type": "boolean"
+    },
+    "content": {
+      "description": "Natural-language message body",
+      "title": "Content",
+      "type": "string"
+    },
+    "timestamp": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISO timestamp",
+      "title": "Timestamp"
+    }
+  },
+  "required": [
+    "message_id",
+    "turn",
+    "sender_id",
+    "content"
+  ],
+  "title": "DiplomaticMessage",
+  "type": "object"
+}

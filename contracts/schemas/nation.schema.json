@@ -1,0 +1,86 @@
+{
+  "description": "Represents an autonomous AI civilization.",
+  "properties": {
+    "id": {
+      "description": "Unique nation ID, e.g. nation_1",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "description": "Civilization name, e.g. Solaria",
+      "title": "Name",
+      "type": "string"
+    },
+    "color": {
+      "description": "Hex color code for map rendering, e.g. #3B82F6",
+      "title": "Color",
+      "type": "string"
+    },
+    "leader_name": {
+      "description": "AI leader persona name",
+      "title": "Leader Name",
+      "type": "string"
+    },
+    "personality": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Starting archetype, e.g. Opportunist, Altruist, Skeptic",
+      "title": "Personality"
+    },
+    "gold": {
+      "default": 100,
+      "description": "Current treasury",
+      "title": "Gold",
+      "type": "integer"
+    },
+    "food": {
+      "default": 60,
+      "description": "Current food stock",
+      "title": "Food",
+      "type": "integer"
+    },
+    "military_units": {
+      "default": 12,
+      "description": "Total active military units across all territories",
+      "title": "Military Units",
+      "type": "integer"
+    },
+    "territory_ids": {
+      "description": "IDs of owned territories",
+      "items": {
+        "type": "string"
+      },
+      "title": "Territory Ids",
+      "type": "array"
+    },
+    "current_goals": {
+      "description": "Active high-level goals",
+      "items": {
+        "type": "string"
+      },
+      "title": "Current Goals",
+      "type": "array"
+    },
+    "is_alive": {
+      "default": true,
+      "description": "False if conquered",
+      "title": "Is Alive",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "color",
+    "leader_name"
+  ],
+  "title": "Nation",
+  "type": "object"
+}

@@ -1,0 +1,60 @@
+{
+  "description": "Formal treaty or pact between two or more civilizations.",
+  "properties": {
+    "agreement_id": {
+      "description": "Unique agreement ID",
+      "title": "Agreement Id",
+      "type": "string"
+    },
+    "turn_formed": {
+      "description": "Turn when agreed",
+      "title": "Turn Formed",
+      "type": "integer"
+    },
+    "parties": {
+      "description": "Nation IDs participating",
+      "items": {
+        "type": "string"
+      },
+      "title": "Parties",
+      "type": "array"
+    },
+    "agreement_type": {
+      "description": "Category of treaty",
+      "enum": [
+        "alliance",
+        "non_aggression",
+        "trade_pact",
+        "military_access"
+      ],
+      "title": "Agreement Type",
+      "type": "string"
+    },
+    "terms": {
+      "description": "Human-readable agreement terms",
+      "title": "Terms",
+      "type": "string"
+    },
+    "status": {
+      "default": "active",
+      "description": "Agreement lifecycle status",
+      "enum": [
+        "active",
+        "violated",
+        "expired",
+        "terminated"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "agreement_id",
+    "turn_formed",
+    "parties",
+    "agreement_type",
+    "terms"
+  ],
+  "title": "DiplomaticAgreement",
+  "type": "object"
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "nation_id": "nation_solaria",
+    "turn": 1,
+    "actions": [
+      {
+        "action_id": "act_001",
+        "nation_id": "nation_solaria",
+        "action_type": "claim",
+        "target_territory_id": "T04",
+        "origin_territory_id": null,
+        "target_nation_id": null,
+        "units_count": null,
+        "gold_amount": null,
+        "food_amount": null,
+        "develop_target": null,
+        "reasoning_note": "Expand east to secure additional food and buffer zone."
+      },
+      {
+        "action_id": "act_002",
+        "nation_id": "nation_solaria",
+        "action_type": "develop",
+        "target_territory_id": "T01",
+        "origin_territory_id": null,
+        "target_nation_id": null,
+        "units_count": null,
+        "gold_amount": null,
+        "food_amount": null,
+        "develop_target": "gold",
+        "reasoning_note": "Boost capital gold production for future recruitment."
+      }
+    ],
+    "outgoing_messages": [
+      {
+        "message_id": "msg_001",
+        "turn": 1,
+        "sender_id": "nation_solaria",
+        "recipient_id": "nation_borealis",
+        "is_private": true,
+        "content": "Greetings Premier Kaelen. Solaria seeks peace on our shared frontier. Shall we agree to respect territory boundaries?",
+        "timestamp": null
+      }
+    ],
+    "strategy_note": "Focus on rapid economic development while sounding diplomatic to keep neighbors at bay."
+  },
+  {
+    "nation_id": "nation_borealis",
+    "turn": 1,
+    "actions": [
+      {
+        "action_id": "act_003",
+        "nation_id": "nation_borealis",
+        "action_type": "recruit",
+        "target_territory_id": "T07",
+        "origin_territory_id": null,
+        "target_nation_id": null,
+        "units_count": 5,
+        "gold_amount": null,
+        "food_amount": null,
+        "develop_target": null,
+        "reasoning_note": "Ensure borders are protected with adequate garrison."
+      }
+    ],
+    "outgoing_messages": [
+      {
+        "message_id": "msg_002",
+        "turn": 1,
+        "sender_id": "nation_borealis",
+        "recipient_id": "nation_solaria",
+        "is_private": true,
+        "content": "We welcome your overture, Archon Vael. We propose a non-aggression pact for the next 10 turns.",
+        "timestamp": null
+      }
+    ],
+    "strategy_note": "Promote mutual cooperation, but maintain defensive garrisons."
+  }
+]

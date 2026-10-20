@@ -1,0 +1,259 @@
+{
+  "$defs": {
+    "DiplomaticMessage": {
+      "description": "Natural-language communication between civilizations.",
+      "properties": {
+        "message_id": {
+          "description": "Unique message ID",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "turn": {
+          "description": "Simulation turn when sent",
+          "title": "Turn",
+          "type": "integer"
+        },
+        "sender_id": {
+          "description": "Sending nation ID",
+          "title": "Sender Id",
+          "type": "string"
+        },
+        "recipient_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target nation ID, or None if public announcement",
+          "title": "Recipient Id"
+        },
+        "is_private": {
+          "default": false,
+          "description": "True if private 1-on-1 message",
+          "title": "Is Private",
+          "type": "boolean"
+        },
+        "content": {
+          "description": "Natural-language message body",
+          "title": "Content",
+          "type": "string"
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO timestamp",
+          "title": "Timestamp"
+        }
+      },
+      "required": [
+        "message_id",
+        "turn",
+        "sender_id",
+        "content"
+      ],
+      "title": "DiplomaticMessage",
+      "type": "object"
+    },
+    "GameAction": {
+      "description": "Represents a validated or pending strategic action submitted by a nation.",
+      "properties": {
+        "action_id": {
+          "description": "Unique action ID",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "nation_id": {
+          "description": "Nation executing the action",
+          "title": "Nation Id",
+          "type": "string"
+        },
+        "action_type": {
+          "description": "Type of action",
+          "enum": [
+            "claim",
+            "recruit",
+            "develop",
+            "move",
+            "attack",
+            "transfer",
+            "trade",
+            "alliance",
+            "pass"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "target_territory_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target territory for claim, develop, move, or attack",
+          "title": "Target Territory Id"
+        },
+        "origin_territory_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Origin territory for military movement or attack",
+          "title": "Origin Territory Id"
+        },
+        "target_nation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target nation for transfers, trades, or treaties",
+          "title": "Target Nation Id"
+        },
+        "units_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number of units committed to move or attack",
+          "title": "Units Count"
+        },
+        "gold_amount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Gold involved in transfer or trade",
+          "title": "Gold Amount"
+        },
+        "food_amount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Food involved in transfer or trade",
+          "title": "Food Amount"
+        },
+        "develop_target": {
+          "anyOf": [
+            {
+              "enum": [
+                "gold",
+                "food"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Resource to improve when developing",
+          "title": "Develop Target"
+        },
+        "reasoning_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "AI reasoning summary for this action",
+          "title": "Reasoning Note"
+        }
+      },
+      "required": [
+        "action_id",
+        "nation_id",
+        "action_type"
+      ],
+      "title": "GameAction",
+      "type": "object"
+    }
+  },
+  "description": "Structured decision returned by an AI agent.",
+  "properties": {
+    "nation_id": {
+      "title": "Nation Id",
+      "type": "string"
+    },
+    "turn": {
+      "title": "Turn",
+      "type": "integer"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/GameAction"
+      },
+      "maxItems": 2,
+      "title": "Actions",
+      "type": "array"
+    },
+    "outgoing_messages": {
+      "items": {
+        "$ref": "#/$defs/DiplomaticMessage"
+      },
+      "title": "Outgoing Messages",
+      "type": "array"
+    },
+    "strategy_note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Strategy Note"
+    }
+  },
+  "required": [
+    "nation_id",
+    "turn"
+  ],
+  "title": "AgentDecision",
+  "type": "object"
+}

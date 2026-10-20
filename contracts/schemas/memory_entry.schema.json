@@ -1,0 +1,71 @@
+{
+  "description": "Individual memory item retained by an AI civilization.",
+  "properties": {
+    "memory_id": {
+      "description": "Unique memory ID",
+      "title": "Memory Id",
+      "type": "string"
+    },
+    "nation_id": {
+      "description": "Nation that holds this memory",
+      "title": "Nation Id",
+      "type": "string"
+    },
+    "memory_type": {
+      "description": "Fact, belief, or recent context",
+      "enum": [
+        "historical_fact",
+        "current_belief",
+        "recent_context"
+      ],
+      "title": "Memory Type",
+      "type": "string"
+    },
+    "subject_nation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Nation this memory pertains to",
+      "title": "Subject Nation Id"
+    },
+    "summary": {
+      "description": "Concise description of the event or belief",
+      "title": "Summary",
+      "type": "string"
+    },
+    "importance": {
+      "default": 0.5,
+      "description": "Relevance weight (0.0 to 1.0)",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Importance",
+      "type": "number"
+    },
+    "turn_recorded": {
+      "description": "Turn when memory was formed",
+      "title": "Turn Recorded",
+      "type": "integer"
+    },
+    "last_updated_turn": {
+      "description": "Turn when memory was last refreshed",
+      "title": "Last Updated Turn",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "memory_id",
+    "nation_id",
+    "memory_type",
+    "summary",
+    "turn_recorded",
+    "last_updated_turn"
+  ],
+  "title": "MemoryEntry",
+  "type": "object"
+}

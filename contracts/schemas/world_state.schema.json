@@ -1,0 +1,230 @@
+{
+  "$defs": {
+    "Nation": {
+      "description": "Represents an autonomous AI civilization.",
+      "properties": {
+        "id": {
+          "description": "Unique nation ID, e.g. nation_1",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Civilization name, e.g. Solaria",
+          "title": "Name",
+          "type": "string"
+        },
+        "color": {
+          "description": "Hex color code for map rendering, e.g. #3B82F6",
+          "title": "Color",
+          "type": "string"
+        },
+        "leader_name": {
+          "description": "AI leader persona name",
+          "title": "Leader Name",
+          "type": "string"
+        },
+        "personality": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Starting archetype, e.g. Opportunist, Altruist, Skeptic",
+          "title": "Personality"
+        },
+        "gold": {
+          "default": 100,
+          "description": "Current treasury",
+          "title": "Gold",
+          "type": "integer"
+        },
+        "food": {
+          "default": 60,
+          "description": "Current food stock",
+          "title": "Food",
+          "type": "integer"
+        },
+        "military_units": {
+          "default": 12,
+          "description": "Total active military units across all territories",
+          "title": "Military Units",
+          "type": "integer"
+        },
+        "territory_ids": {
+          "description": "IDs of owned territories",
+          "items": {
+            "type": "string"
+          },
+          "title": "Territory Ids",
+          "type": "array"
+        },
+        "current_goals": {
+          "description": "Active high-level goals",
+          "items": {
+            "type": "string"
+          },
+          "title": "Current Goals",
+          "type": "array"
+        },
+        "is_alive": {
+          "default": true,
+          "description": "False if conquered",
+          "title": "Is Alive",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "leader_name"
+      ],
+      "title": "Nation",
+      "type": "object"
+    },
+    "Territory": {
+      "description": "Represents a discrete region on the Risk-style map.",
+      "properties": {
+        "id": {
+          "description": "Unique territory ID, e.g. T01",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Human-readable territory name",
+          "title": "Name",
+          "type": "string"
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Nation ID owning this territory, None if neutral",
+          "title": "Owner Id"
+        },
+        "gold_production": {
+          "default": 5,
+          "description": "Gold produced per turn",
+          "title": "Gold Production",
+          "type": "integer"
+        },
+        "food_production": {
+          "default": 4,
+          "description": "Food produced per turn",
+          "title": "Food Production",
+          "type": "integer"
+        },
+        "stationed_military": {
+          "default": 0,
+          "description": "Military units stationed here",
+          "title": "Stationed Military",
+          "type": "integer"
+        },
+        "adjacent_territory_ids": {
+          "description": "List of adjacent territory IDs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Adjacent Territory Ids",
+          "type": "array"
+        },
+        "coord_x": {
+          "default": 0.0,
+          "description": "2D map layout X coordinate (0-100 scale)",
+          "title": "Coord X",
+          "type": "number"
+        },
+        "coord_y": {
+          "default": 0.0,
+          "description": "2D map layout Y coordinate (0-100 scale)",
+          "title": "Coord Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Territory",
+      "type": "object"
+    }
+  },
+  "description": "Authoritative snapshot of the entire simulation world.",
+  "properties": {
+    "simulation_id": {
+      "description": "Unique simulation identifier",
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "turn": {
+      "default": 1,
+      "description": "Current turn number",
+      "title": "Turn",
+      "type": "integer"
+    },
+    "phase": {
+      "default": "world_update",
+      "description": "Current turn phase",
+      "enum": [
+        "world_update",
+        "diplomacy",
+        "strategic_decisions",
+        "resolution",
+        "history_memory"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "seed": {
+      "default": 42,
+      "description": "Random seed used for generation",
+      "title": "Seed",
+      "type": "integer"
+    },
+    "nations": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Nation"
+      },
+      "description": "Map of nation_id -> Nation",
+      "title": "Nations",
+      "type": "object"
+    },
+    "territories": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Territory"
+      },
+      "description": "Map of territory_id -> Territory",
+      "title": "Territories",
+      "type": "object"
+    },
+    "is_paused": {
+      "default": true,
+      "description": "Whether simulation is currently running",
+      "title": "Is Paused",
+      "type": "boolean"
+    },
+    "speed": {
+      "default": 1.0,
+      "description": "Speed multiplier (0.5x, 1x, 2x)",
+      "title": "Speed",
+      "type": "number"
+    }
+  },
+  "required": [
+    "simulation_id",
+    "nations",
+    "territories"
+  ],
+  "title": "WorldState",
+  "type": "object"
+}

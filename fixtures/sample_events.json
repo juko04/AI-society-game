@@ -1,0 +1,63 @@
+[
+  {
+    "event_id": "evt_001",
+    "turn": 1,
+    "phase": "world_update",
+    "event_type": "world_update",
+    "summary": "Simulation initialized with 6 civilizations and 36 territories.",
+    "source_nation_id": null,
+    "target_nation_id": null,
+    "territory_id": null,
+    "details": {
+      "nations_count": 6,
+      "territories_count": 36,
+      "seed": 42
+    },
+    "timestamp": "2026-10-20T15:48:04.972174+00:00"
+  },
+  {
+    "event_id": "evt_002",
+    "turn": 1,
+    "phase": "diplomacy",
+    "event_type": "announcement",
+    "summary": "Archon Vael of Solaria broadcast a public desire for peaceful trade along the river.",
+    "source_nation_id": "nation_solaria",
+    "target_nation_id": null,
+    "territory_id": null,
+    "details": {
+      "message": "Let us enrich our peoples rather than shed blood upon our borders."
+    },
+    "timestamp": "2026-10-20T15:48:04.972174+00:00"
+  },
+  {
+    "event_id": "evt_003",
+    "turn": 1,
+    "phase": "strategic_decisions",
+    "event_type": "claim",
+    "summary": "Viridia claimed neutral territory Highland Pass (T02).",
+    "source_nation_id": "nation_viridia",
+    "target_nation_id": null,
+    "territory_id": "T02",
+    "details": {
+      "cost_gold": 20,
+      "cost_food": 10
+    },
+    "timestamp": "2026-10-20T15:48:04.972174+00:00"
+  },
+  {
+    "event_id": "evt_004",
+    "turn": 1,
+    "phase": "resolution",
+    "event_type": "recruit",
+    "summary": "Pyros recruited 5 military units in Ember Gorge (T19).",
+    "source_nation_id": "nation_pyros",
+    "target_nation_id": null,
+    "territory_id": "T19",
+    "details": {
+      "cost_gold": 20,
+      "cost_food": 10,
+      "units_added": 5
+    },
+    "timestamp": "2026-10-20T15:48:04.972174+00:00"
+  }
+]

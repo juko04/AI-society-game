@@ -1,0 +1,72 @@
+{
+  "description": "Represents a discrete region on the Risk-style map.",
+  "properties": {
+    "id": {
+      "description": "Unique territory ID, e.g. T01",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "description": "Human-readable territory name",
+      "title": "Name",
+      "type": "string"
+    },
+    "owner_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Nation ID owning this territory, None if neutral",
+      "title": "Owner Id"
+    },
+    "gold_production": {
+      "default": 5,
+      "description": "Gold produced per turn",
+      "title": "Gold Production",
+      "type": "integer"
+    },
+    "food_production": {
+      "default": 4,
+      "description": "Food produced per turn",
+      "title": "Food Production",
+      "type": "integer"
+    },
+    "stationed_military": {
+      "default": 0,
+      "description": "Military units stationed here",
+      "title": "Stationed Military",
+      "type": "integer"
+    },
+    "adjacent_territory_ids": {
+      "description": "List of adjacent territory IDs",
+      "items": {
+        "type": "string"
+      },
+      "title": "Adjacent Territory Ids",
+      "type": "array"
+    },
+    "coord_x": {
+      "default": 0.0,
+      "description": "2D map layout X coordinate (0-100 scale)",
+      "title": "Coord X",
+      "type": "number"
+    },
+    "coord_y": {
+      "default": 0.0,
+      "description": "2D map layout Y coordinate (0-100 scale)",
+      "title": "Coord Y",
+      "type": "number"
+    }
+  },
+  "required": [
+    "id",
+    "name"
+  ],
+  "title": "Territory",
+  "type": "object"
+}

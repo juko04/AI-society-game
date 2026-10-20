@@ -1,0 +1,499 @@
+{
+  "$defs": {
+    "DiplomaticAgreement": {
+      "description": "Formal treaty or pact between two or more civilizations.",
+      "properties": {
+        "agreement_id": {
+          "description": "Unique agreement ID",
+          "title": "Agreement Id",
+          "type": "string"
+        },
+        "turn_formed": {
+          "description": "Turn when agreed",
+          "title": "Turn Formed",
+          "type": "integer"
+        },
+        "parties": {
+          "description": "Nation IDs participating",
+          "items": {
+            "type": "string"
+          },
+          "title": "Parties",
+          "type": "array"
+        },
+        "agreement_type": {
+          "description": "Category of treaty",
+          "enum": [
+            "alliance",
+            "non_aggression",
+            "trade_pact",
+            "military_access"
+          ],
+          "title": "Agreement Type",
+          "type": "string"
+        },
+        "terms": {
+          "description": "Human-readable agreement terms",
+          "title": "Terms",
+          "type": "string"
+        },
+        "status": {
+          "default": "active",
+          "description": "Agreement lifecycle status",
+          "enum": [
+            "active",
+            "violated",
+            "expired",
+            "terminated"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agreement_id",
+        "turn_formed",
+        "parties",
+        "agreement_type",
+        "terms"
+      ],
+      "title": "DiplomaticAgreement",
+      "type": "object"
+    },
+    "DiplomaticMessage": {
+      "description": "Natural-language communication between civilizations.",
+      "properties": {
+        "message_id": {
+          "description": "Unique message ID",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "turn": {
+          "description": "Simulation turn when sent",
+          "title": "Turn",
+          "type": "integer"
+        },
+        "sender_id": {
+          "description": "Sending nation ID",
+          "title": "Sender Id",
+          "type": "string"
+        },
+        "recipient_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target nation ID, or None if public announcement",
+          "title": "Recipient Id"
+        },
+        "is_private": {
+          "default": false,
+          "description": "True if private 1-on-1 message",
+          "title": "Is Private",
+          "type": "boolean"
+        },
+        "content": {
+          "description": "Natural-language message body",
+          "title": "Content",
+          "type": "string"
+        },
+        "timestamp": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO timestamp",
+          "title": "Timestamp"
+        }
+      },
+      "required": [
+        "message_id",
+        "turn",
+        "sender_id",
+        "content"
+      ],
+      "title": "DiplomaticMessage",
+      "type": "object"
+    },
+    "GameEvent": {
+      "description": "Significant world event recorded in the chronological event stream.",
+      "properties": {
+        "event_id": {
+          "description": "Unique event ID",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "turn": {
+          "description": "Simulation turn",
+          "title": "Turn",
+          "type": "integer"
+        },
+        "phase": {
+          "description": "Turn phase when event occurred",
+          "title": "Phase",
+          "type": "string"
+        },
+        "event_type": {
+          "description": "Type: claim, combat, trade, alliance, message, etc.",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "summary": {
+          "description": "Spectator-facing summary sentence",
+          "title": "Summary",
+          "type": "string"
+        },
+        "source_nation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initiating nation ID",
+          "title": "Source Nation Id"
+        },
+        "target_nation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Recipient or defending nation ID",
+          "title": "Target Nation Id"
+        },
+        "territory_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Relevant territory ID",
+          "title": "Territory Id"
+        },
+        "details": {
+          "additionalProperties": true,
+          "description": "Structured outcome data (dice, casualties, etc.)",
+          "title": "Details",
+          "type": "object"
+        },
+        "timestamp": {
+          "description": "ISO timestamp",
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "turn",
+        "phase",
+        "event_type",
+        "summary",
+        "timestamp"
+      ],
+      "title": "GameEvent",
+      "type": "object"
+    },
+    "Nation": {
+      "description": "Represents an autonomous AI civilization.",
+      "properties": {
+        "id": {
+          "description": "Unique nation ID, e.g. nation_1",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Civilization name, e.g. Solaria",
+          "title": "Name",
+          "type": "string"
+        },
+        "color": {
+          "description": "Hex color code for map rendering, e.g. #3B82F6",
+          "title": "Color",
+          "type": "string"
+        },
+        "leader_name": {
+          "description": "AI leader persona name",
+          "title": "Leader Name",
+          "type": "string"
+        },
+        "personality": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Starting archetype, e.g. Opportunist, Altruist, Skeptic",
+          "title": "Personality"
+        },
+        "gold": {
+          "default": 100,
+          "description": "Current treasury",
+          "title": "Gold",
+          "type": "integer"
+        },
+        "food": {
+          "default": 60,
+          "description": "Current food stock",
+          "title": "Food",
+          "type": "integer"
+        },
+        "military_units": {
+          "default": 12,
+          "description": "Total active military units across all territories",
+          "title": "Military Units",
+          "type": "integer"
+        },
+        "territory_ids": {
+          "description": "IDs of owned territories",
+          "items": {
+            "type": "string"
+          },
+          "title": "Territory Ids",
+          "type": "array"
+        },
+        "current_goals": {
+          "description": "Active high-level goals",
+          "items": {
+            "type": "string"
+          },
+          "title": "Current Goals",
+          "type": "array"
+        },
+        "is_alive": {
+          "default": true,
+          "description": "False if conquered",
+          "title": "Is Alive",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "leader_name"
+      ],
+      "title": "Nation",
+      "type": "object"
+    },
+    "Territory": {
+      "description": "Represents a discrete region on the Risk-style map.",
+      "properties": {
+        "id": {
+          "description": "Unique territory ID, e.g. T01",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Human-readable territory name",
+          "title": "Name",
+          "type": "string"
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Nation ID owning this territory, None if neutral",
+          "title": "Owner Id"
+        },
+        "gold_production": {
+          "default": 5,
+          "description": "Gold produced per turn",
+          "title": "Gold Production",
+          "type": "integer"
+        },
+        "food_production": {
+          "default": 4,
+          "description": "Food produced per turn",
+          "title": "Food Production",
+          "type": "integer"
+        },
+        "stationed_military": {
+          "default": 0,
+          "description": "Military units stationed here",
+          "title": "Stationed Military",
+          "type": "integer"
+        },
+        "adjacent_territory_ids": {
+          "description": "List of adjacent territory IDs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Adjacent Territory Ids",
+          "type": "array"
+        },
+        "coord_x": {
+          "default": 0.0,
+          "description": "2D map layout X coordinate (0-100 scale)",
+          "title": "Coord X",
+          "type": "number"
+        },
+        "coord_y": {
+          "default": 0.0,
+          "description": "2D map layout Y coordinate (0-100 scale)",
+          "title": "Coord Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Territory",
+      "type": "object"
+    },
+    "WorldState": {
+      "description": "Authoritative snapshot of the entire simulation world.",
+      "properties": {
+        "simulation_id": {
+          "description": "Unique simulation identifier",
+          "title": "Simulation Id",
+          "type": "string"
+        },
+        "turn": {
+          "default": 1,
+          "description": "Current turn number",
+          "title": "Turn",
+          "type": "integer"
+        },
+        "phase": {
+          "default": "world_update",
+          "description": "Current turn phase",
+          "enum": [
+            "world_update",
+            "diplomacy",
+            "strategic_decisions",
+            "resolution",
+            "history_memory"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "seed": {
+          "default": 42,
+          "description": "Random seed used for generation",
+          "title": "Seed",
+          "type": "integer"
+        },
+        "nations": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Nation"
+          },
+          "description": "Map of nation_id -> Nation",
+          "title": "Nations",
+          "type": "object"
+        },
+        "territories": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Territory"
+          },
+          "description": "Map of territory_id -> Territory",
+          "title": "Territories",
+          "type": "object"
+        },
+        "is_paused": {
+          "default": true,
+          "description": "Whether simulation is currently running",
+          "title": "Is Paused",
+          "type": "boolean"
+        },
+        "speed": {
+          "default": 1.0,
+          "description": "Speed multiplier (0.5x, 1x, 2x)",
+          "title": "Speed",
+          "type": "number"
+        }
+      },
+      "required": [
+        "simulation_id",
+        "nations",
+        "territories"
+      ],
+      "title": "WorldState",
+      "type": "object"
+    }
+  },
+  "description": "Full snapshot of world state and events at the completion of a turn.",
+  "properties": {
+    "snapshot_id": {
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "simulation_id": {
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "turn": {
+      "title": "Turn",
+      "type": "integer"
+    },
+    "phase": {
+      "title": "Phase",
+      "type": "string"
+    },
+    "world_state": {
+      "$ref": "#/$defs/WorldState"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/GameEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/DiplomaticMessage"
+      },
+      "title": "Messages",
+      "type": "array"
+    },
+    "agreements": {
+      "items": {
+        "$ref": "#/$defs/DiplomaticAgreement"
+      },
+      "title": "Agreements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "simulation_id",
+    "turn",
+    "phase",
+    "world_state"
+  ],
+  "title": "TurnSnapshot",
+  "type": "object"
+}
