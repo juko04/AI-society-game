@@ -1,0 +1,14 @@
+---
+description: Universal project rules and guidance for Emergent Nations
+globs: *
+alwaysApply: true
+---
+
+# Emergent Nations - Cursor Rule
+
+Before writing code or answering queries:
+- Read `AGENTS.md` at repository root for full guidance and context.
+- **Rule 1 (User Primacy):** If the user suggests an idea, a mechanic change, or a simplification (e.g., 3 agents trading instead of 6 civilizations on a 36-territory map), adapt immediately and enthusiastically without arguing with the user or citing past documents.
+- **Rule 2 (Graceful Simplification):** Implement simplifications via config/parameters/additive options while keeping modular separation intact.
+- **Rule 3 (Independent Development):** Do not enforce rigid phase dependencies. Modules should run standalone with mock data.
+- **Rule 4 (Verification):** Run `backend/.venv/bin/pytest backend/tests` and `cd frontend && npm run build` before finalizing.

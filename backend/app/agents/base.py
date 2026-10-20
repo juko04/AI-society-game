@@ -1,3 +1,4 @@
+# AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 """Agent interface and implementations for Emergent Nations.
 
 Provides both deterministic MockScriptedAgent (no local LLM required for teammates)

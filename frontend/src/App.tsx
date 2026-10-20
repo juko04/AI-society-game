@@ -1,3 +1,4 @@
+// AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from './components/Header';
 import { SimulationControls } from './components/SimulationControls';

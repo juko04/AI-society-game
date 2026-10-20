@@ -1,3 +1,4 @@
+# AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 """Core Pydantic data contracts for Emergent Nations.
 
 These contracts serve as the single source of truth across the backend,

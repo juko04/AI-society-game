@@ -1,3 +1,4 @@
+// AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 /**
  * Shared Data Contracts - TypeScript definitions
  * Generated to match backend/app/schemas/contracts.py

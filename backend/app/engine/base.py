@@ -1,3 +1,4 @@
+# AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 """Deterministic Game Engine for Emergent Nations.
 
 Implements territorial adjacency, resource production, military upkeep,

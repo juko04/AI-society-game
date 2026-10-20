@@ -1,3 +1,4 @@
+// AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 import {
   HealthResponse,
   WorldState,

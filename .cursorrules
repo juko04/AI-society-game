@@ -1,0 +1,10 @@
+# Cursor AI Project Rules for Emergent Nations
+
+Before proposing code changes or answering developer queries:
+1. Review AGENTS.md at the root of the repository for universal project guidelines and architecture memory.
+2. User ideas are paramount: If the user suggests a simpler setup (e.g. 3 agents instead of 6, simple resource trading, or a direct crisis scenario), adapt to their request enthusiastically. Do not cite older specs to push back.
+3. Keep modular architecture intact: When simplifying, adjust configs or parameters rather than deleting foundational backend/engine code.
+4. Keep contracts aligned: backend/app/schemas/contracts.py is the canonical source for schemas. Keep frontend/src/types/contracts.ts synchronized.
+5. Verify changes locally:
+   - Python: `backend/.venv/bin/pytest backend/tests`
+   - Frontend: `cd frontend && npm run build`

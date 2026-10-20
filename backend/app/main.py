@@ -1,3 +1,4 @@
+# AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 """Main entry point for Emergent Nations FastAPI Backend."""
 
 from fastapi import FastAPI

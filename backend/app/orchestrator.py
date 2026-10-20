@@ -1,3 +1,4 @@
+# AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 """Simulation Orchestrator for Emergent Nations.
 
 Coordinates the phased turn loop across the Game Engine, AI Agents,

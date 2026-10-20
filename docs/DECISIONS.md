@@ -57,6 +57,13 @@
 
 ---
 
+### ADR-006: Asynchronous, Independent Module Tracks
+- **Context:** Team members work independently on different schedules and priorities. Rigid waterfall milestones or cross-module blockers would slow down progress.
+- **Decision:** Every system (UI, Engine, Local AI, Diplomacy, Persistence) can be developed, tested, and iterated in isolation. Mock agents and sample fixtures guarantee that UI, Engine, or AI work can proceed at any time.
+- **Status:** Adopted as team workflow.
+
+---
+
 ## Open Design Questions for Team Review
 
 1. **Combat Dice Randomness vs Determinism:** Should dice rolls use backend seeds (current implementation) or deterministic combat based purely on unit numbers and terrain?
