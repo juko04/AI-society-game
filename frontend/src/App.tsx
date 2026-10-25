@@ -1,4 +1,3 @@
-// AI NOTICE: Before modifying this project, read AGENTS.md for architecture, flexibility, and collaboration guidelines.
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from './components/Header';
 import { SimulationControls } from './components/SimulationControls';
@@ -6,6 +5,7 @@ import { CivilizationList } from './components/CivilizationList';
 import { TerritoryMap } from './components/TerritoryMap';
 import { EventFeed } from './components/EventFeed';
 import { NationInspector } from './components/NationInspector';
+import { CombatModal } from './components/CombatModal';
 import {
   fetchHealth,
   fetchWorldState,
@@ -13,9 +13,11 @@ import {
   stepSimulation,
   resetSimulation,
 } from './services/api';
+import { offlineEngine } from './services/offlineEngine';
+import { soundService } from './services/sound';
 import { WorldState, GameEvent } from './types/contracts';
 
-// Fallback fixture if backend is offline
+// Fallback fixtures
 import sampleWorldFixture from '../../fixtures/sample_world.json';
 import sampleEventsFixture from '../../fixtures/sample_events.json';
 
@@ -23,30 +25,31 @@ export function App() {
   const [worldState, setWorldState] = useState<WorldState>(sampleWorldFixture as unknown as WorldState);
   const [events, setEvents] = useState<GameEvent[]>(sampleEventsFixture as unknown as GameEvent[]);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [mockAiEnabled, setMockAiEnabled] = useState<boolean>(true);
   const [selectedNationId, setSelectedNationId] = useState<string | null>(null);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(1);
+  const [isMuted, setIsMuted] = useState<boolean>(soundService.isMuted());
+  const [activeCombatEvent, setActiveCombatEvent] = useState<GameEvent | null>(null);
 
   const autoPlayRef = useRef<number | null>(null);
 
-  // Load initial backend state
+  // Load initial state
   const loadData = useCallback(async () => {
     try {
-      const health = await fetchHealth();
+      await fetchHealth();
       setIsConnected(true);
-      setMockAiEnabled(health.mock_ai_enabled);
-
       const [state, evts] = await Promise.all([
         fetchWorldState(),
-        fetchEvents(50),
+        fetchEvents(100),
       ]);
       setWorldState(state);
       setEvents(evts);
     } catch {
-      // Backend not running; keep offline indicator and local fixture
       setIsConnected(false);
+      setWorldState(offlineEngine.getWorldState());
+      setEvents(offlineEngine.getEvents(100));
     }
   }, []);
 
@@ -56,19 +59,33 @@ export function App() {
     return () => clearInterval(interval);
   }, [loadData]);
 
+  const handleToggleMute = () => {
+    const nextMuted = soundService.toggleMute();
+    setIsMuted(nextMuted);
+  };
+
+  const handleNewEvents = (newEvents: GameEvent[]) => {
+    const combat = newEvents.find((e) => e.event_type === 'combat');
+    if (combat) {
+      soundService.playCombat();
+      setActiveCombatEvent(combat);
+    } else {
+      const conquest = newEvents.find((e) => e.event_type === 'claim');
+      if (conquest) {
+        soundService.playConquest();
+      }
+    }
+  };
+
   // Step single phase
   const handleStepPhase = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      if (isConnected) {
-        const res = await stepSimulation(false);
-        setWorldState(res.world_state);
-        setEvents((prev) => [...prev, ...res.new_events]);
-      } else {
-        // Local simulation fallback
-        alert('Backend is offline. Start the backend with ./scripts/run_backend.sh to advance live simulation.');
-      }
+      const res = await stepSimulation(false, isConnected);
+      setWorldState(res.world_state);
+      setEvents((prev) => [...prev, ...res.new_events]);
+      handleNewEvents(res.new_events);
     } catch (err) {
       console.error('Failed to step phase:', err);
     } finally {
@@ -76,18 +93,15 @@ export function App() {
     }
   };
 
-  // Step full turn cycle
+  // Step full turn
   const handleStepTurn = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      if (isConnected) {
-        const res = await stepSimulation(true);
-        setWorldState(res.world_state);
-        setEvents((prev) => [...prev, ...res.new_events]);
-      } else {
-        alert('Backend is offline. Start the backend with ./scripts/run_backend.sh to advance live simulation.');
-      }
+      const res = await stepSimulation(true, isConnected);
+      setWorldState(res.world_state);
+      setEvents((prev) => [...prev, ...res.new_events]);
+      handleNewEvents(res.new_events);
     } catch (err) {
       console.error('Failed to step turn:', err);
     } finally {
@@ -95,21 +109,18 @@ export function App() {
     }
   };
 
-  // Reset simulation
+  // Reset game
   const handleReset = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
     setIsAutoPlaying(false);
     try {
-      if (isConnected) {
-        const freshState = await resetSimulation();
-        setWorldState(freshState);
-        const evts = await fetchEvents(50);
-        setEvents(evts);
-      } else {
-        setWorldState(sampleWorldFixture as unknown as WorldState);
-        setEvents(sampleEventsFixture as unknown as GameEvent[]);
-      }
+      const freshState = await resetSimulation('standard', isConnected);
+      setWorldState(freshState);
+      setEvents(offlineEngine.getEvents(100));
+      setSelectedNationId(null);
+      setSelectedTerritoryId(null);
+      setActiveCombatEvent(null);
     } catch (err) {
       console.error('Failed to reset:', err);
     } finally {
@@ -123,16 +134,18 @@ export function App() {
   };
 
   useEffect(() => {
-    if (isAutoPlaying && isConnected) {
+    if (isAutoPlaying) {
+      const intervalMs = Math.max(350, Math.floor(1300 / speed));
       autoPlayRef.current = window.setInterval(async () => {
         try {
-          const res = await stepSimulation(false);
+          const res = await stepSimulation(false, isConnected);
           setWorldState(res.world_state);
           setEvents((prev) => [...prev, ...res.new_events]);
+          handleNewEvents(res.new_events);
         } catch {
           setIsAutoPlaying(false);
         }
-      }, 1500);
+      }, intervalMs);
     } else {
       if (autoPlayRef.current) {
         clearInterval(autoPlayRef.current);
@@ -142,7 +155,35 @@ export function App() {
     return () => {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     };
-  }, [isAutoPlaying, isConnected]);
+  }, [isAutoPlaying, isConnected, speed]);
+
+  // Keyboard controls (Space = play/pause, ArrowRight = step, T = turn, R = reset)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handleTogglePlay();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        handleStepPhase();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        handleStepTurn();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleReset();
+      } else if (e.key === 'Escape') {
+        setSelectedNationId(null);
+        setSelectedTerritoryId(null);
+        setActiveCombatEvent(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleTogglePlay, handleStepPhase, handleStepTurn, handleReset]);
 
   const nationsList = Object.values(worldState.nations || {});
   const territoriesList = Object.values(worldState.territories || {});
@@ -150,43 +191,64 @@ export function App() {
 
   return (
     <div className="app-container">
+      {/* Cartoon Top Header */}
       <Header
-        isConnected={isConnected}
-        mockAiEnabled={mockAiEnabled}
         turn={worldState.turn}
         phase={worldState.phase}
+        isConnected={isConnected}
       />
 
+      {/* 3D Toy Game Control Bar */}
       <SimulationControls
         isPaused={!isAutoPlaying}
         onTogglePlay={handleTogglePlay}
         onStepPhase={handleStepPhase}
         onStepTurn={handleStepTurn}
         onReset={handleReset}
-        seed={worldState.seed}
         isProcessing={isProcessing}
+        speed={speed}
+        onSpeedChange={setSpeed}
+        isMuted={isMuted}
+        onToggleMute={handleToggleMute}
       />
 
-      <main className="dashboard-grid">
+      {/* Clean 3-Column Game Board Layout */}
+      <main className="game-layout">
+        {/* Left: Kingdoms (Civilizations) */}
         <CivilizationList
           nations={nationsList}
           selectedNationId={selectedNationId}
           onSelectNation={(id) => setSelectedNationId(id === selectedNationId ? null : id)}
         />
 
+        {/* Center: The Game Board (Vector Risk Map) */}
         <TerritoryMap
           territories={territoriesList}
           nations={worldState.nations}
           selectedTerritoryId={selectedTerritoryId}
           onSelectTerritory={(id) => setSelectedTerritoryId(id === selectedTerritoryId ? null : id)}
+          latestCombatEvent={events.find((e) => e.event_type === 'combat') || null}
+          onOpenCombatModal={(event) => setActiveCombatEvent(event)}
         />
 
-        <EventFeed events={events} />
+        {/* Right: Live Chronicle */}
+        <EventFeed
+          events={events}
+          onOpenCombatModal={(event) => setActiveCombatEvent(event)}
+        />
       </main>
 
+      {/* Pop-up Mini Dossier when a Kingdom is clicked */}
       <NationInspector
         nation={selectedNation}
         onClose={() => setSelectedNationId(null)}
+      />
+
+      {/* Pop-up Battle Arena when Combat happens */}
+      <CombatModal
+        combatEvent={activeCombatEvent}
+        nations={worldState.nations}
+        onClose={() => setActiveCombatEvent(null)}
       />
     </div>
   );

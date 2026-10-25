@@ -1,5 +1,4 @@
 import React from 'react';
-import { Coins, Wheat, Shield, MapPin } from 'lucide-react';
 import { Nation } from '../types/contracts';
 
 interface CivilizationListProps {
@@ -14,54 +13,91 @@ export const CivilizationList: React.FC<CivilizationListProps> = ({
   onSelectNation,
 }) => {
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2 className="card-title">Civilizations ({nations.length})</h2>
+    <div className="game-card">
+      <div className="game-card-header">
+        <h2 className="game-card-title">
+          <span>👑</span>
+          <span>Kingdoms ({nations.length})</span>
+        </h2>
       </div>
-      <div className="card-body">
-        {nations.map((nation) => {
-          const isSelected = nation.id === selectedNationId;
-          return (
-            <div
-              key={nation.id}
-              className={`nation-card ${isSelected ? 'selected' : ''}`}
-              style={{ '--nation-color': nation.color } as React.CSSProperties}
-              onClick={() => onSelectNation(nation.id)}
-            >
-              <div className="nation-header">
-                <span className="nation-name" style={{ color: nation.color }}>
-                  {nation.name}
-                </span>
-                <span className="nation-personality">
-                  {nation.personality || 'Neutral'}
-                </span>
-              </div>
 
-              <div className="nation-leader">
-                Leader: {nation.leader_name}
-              </div>
+      <div className="game-card-body">
+        <div className="kingdoms-list">
+          {nations.map((nation) => {
+            const isSelected = nation.id === selectedNationId;
+            const upkeep = Math.ceil(nation.military_units / 4);
+            const isStarving = nation.food < upkeep && nation.is_alive;
 
-              <div className="nation-stats">
-                <div className="stat-item stat-gold" title="Treasury Gold">
-                  <Coins size={12} />
-                  <span>{nation.gold}</span>
+            return (
+              <div
+                key={nation.id}
+                className={`kingdom-card ${isSelected ? 'selected' : ''} ${!nation.is_alive ? 'fallen' : ''}`}
+                style={{ borderColor: isSelected ? 'var(--color-gold)' : nation.color }}
+                onClick={() => onSelectNation(nation.id)}
+              >
+                <div className="kingdom-top-row">
+                  <div className="kingdom-brand">
+                    <div
+                      className="kingdom-avatar-circle"
+                      style={{
+                        backgroundColor: `${nation.color}25`,
+                        borderColor: nation.color,
+                        color: nation.color,
+                      }}
+                    >
+                      {nation.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="kingdom-name" style={{ color: nation.color }}>
+                        {nation.name}
+                      </div>
+                      <div className="kingdom-leader">
+                        {nation.leader_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    {!nation.is_alive ? (
+                      <span className="kingdom-personality-badge" style={{ color: '#f87171' }}>
+                        💀 Defeated
+                      </span>
+                    ) : isStarving ? (
+                      <span className="kingdom-personality-badge" style={{ color: '#fcd34d' }}>
+                        ⚠️ Starving!
+                      </span>
+                    ) : (
+                      <span className="kingdom-personality-badge">
+                        {nation.personality || 'Neutral'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="stat-item stat-food" title="Food Stores">
-                  <Wheat size={12} />
-                  <span>{nation.food}</span>
-                </div>
-                <div className="stat-item stat-military" title="Total Military Units">
-                  <Shield size={12} />
-                  <span>{nation.military_units}</span>
-                </div>
-                <div className="stat-item stat-lands" title="Territories Controlled">
-                  <MapPin size={12} />
-                  <span>{nation.territory_ids.length}</span>
-                </div>
+
+                {nation.is_alive && (
+                  <div className="kingdom-stats-row">
+                    <div className="stat-pill stat-gold" title="Gold Treasury">
+                      <span>🪙</span>
+                      <span>{nation.gold}</span>
+                    </div>
+                    <div className="stat-pill stat-food" title="Food Granary">
+                      <span>🍞</span>
+                      <span>{nation.food}</span>
+                    </div>
+                    <div className="stat-pill stat-army" title="Army Soldiers">
+                      <span>⚔️</span>
+                      <span>{nation.military_units}</span>
+                    </div>
+                    <div className="stat-pill stat-lands" title="Owned Lands">
+                      <span>🏰</span>
+                      <span>{nation.territory_ids.length}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
