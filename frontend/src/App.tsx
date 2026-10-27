@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { SimulationControls } from './components/SimulationControls';
 import { CivilizationList } from './components/CivilizationList';
@@ -28,8 +28,20 @@ export function App() {
   const [selectedNationId, setSelectedNationId] = useState<string | null>(null);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(1);
+  const speedRef = useRef<number>(speed);
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false);
+  const isAutoPlayingRef = useRef<boolean>(isAutoPlaying);
+  useEffect(() => {
+    isAutoPlayingRef.current = isAutoPlaying;
+  }, [isAutoPlaying]);
+
+  const isTurnRunningRef = useRef<boolean>(false);
+
   const [isMuted, setIsMuted] = useState<boolean>(soundService.isMuted());
   const [activeCombatEvent, setActiveCombatEvent] = useState<GameEvent | null>(null);
   const [thinkingNation, setThinkingNation] = useState<{ id: string; name: string; leader_name: string; color: string } | null>(null);
@@ -71,10 +83,10 @@ export function App() {
         soundService.playCombat();
         setActiveCombatEvent(combat);
         // In auto-play, auto-dismiss combat popup after a moment so turn flow stays smooth
-        if (isAutoPlaying) {
+        if (isAutoPlayingRef.current) {
           setTimeout(() => {
             setActiveCombatEvent(null);
-          }, speed === 4 ? 600 : 2500);
+          }, speedRef.current === 4 ? 600 : 2500);
         }
       } else {
         const conquest = newEvents.find((e) => e.event_type === 'claim');
@@ -83,7 +95,7 @@ export function App() {
         }
       }
     },
-    [isAutoPlaying, speed]
+    []
   );
 
   const startThinkingCycle = useCallback(() => {
@@ -96,25 +108,26 @@ export function App() {
     const interval = window.setInterval(() => {
       idx = (idx + 1) % aliveNations.length;
       setThinkingNation(aliveNations[idx]);
-    }, Math.max(500, Math.floor(1400 / speed)));
+    }, Math.max(300, Math.floor(1200 / (speedRef.current || 1))));
 
     return () => {
       clearInterval(interval);
       setThinkingNation(null);
       setThinkingActivity(null);
     };
-  }, [worldState.nations, speed]);
+  }, [worldState.nations]);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   // Plays a full turn in observable stages:
   // Stage 1: Yields & Discussions (AI generates diplomatic speech & plans moves)
   // Stage 2: Actions & Resolution (Board updates with movements, conquests, and battles)
-  // Stage 3: Spectator pause (At 1x/2x speed, pauses so user absorbs what happened; at 4x speed, 0 wait)
-  const playOneTurn = useCallback(
-    async (isCancelledFn?: () => boolean): Promise<boolean> => {
-      if (isCancelledFn && isCancelledFn()) return false;
+  // Stage 3: Spectator pause (At 1x/2x speed, pauses so user absorbs what happened; at 4x speed, minimal repaint tick)
+  const playOneTurn = useCallback(async (): Promise<boolean> => {
+    if (isTurnRunningRef.current) return false;
+    isTurnRunningRef.current = true;
 
+    try {
       // --- STAGE 1: DIPLOMACY & DISCUSSIONS ---
       setIsProcessing(true);
       setThinkingActivity('Civilizations are conducting diplomatic council...');
@@ -122,8 +135,6 @@ export function App() {
 
       try {
         const dipRes = await stepSimulation(false, isConnected, 'diplomacy');
-        if (isCancelledFn && isCancelledFn()) return false;
-
         setWorldState(dipRes.world_state);
         setEvents((prev) => [...prev, ...dipRes.new_events]);
         handleNewEvents(dipRes.new_events);
@@ -133,25 +144,18 @@ export function App() {
         stopCycle1();
       }
 
-      if (isCancelledFn && isCancelledFn()) return false;
-
-      // Brief reading pause for discussions (omitted when sped up at 4x)
-      const dipPauseMs = speed === 4 ? 0 : Math.max(250, Math.floor(1400 / speed));
-      if (dipPauseMs > 0) {
-        await sleep(dipPauseMs);
-      }
-
-      if (isCancelledFn && isCancelledFn()) return false;
+      // Reading pause for discussions (at 4x speed: 120ms tick so React flushes DOM updates)
+      const currentSpeed = speedRef.current;
+      const dipPauseMs = currentSpeed === 4 ? 120 : Math.max(300, Math.floor(1500 / currentSpeed));
+      await sleep(dipPauseMs);
 
       // --- STAGE 2: ACTIONS & BOARD RESOLUTION ---
       setIsProcessing(true);
-      setThinkingActivity('Executing strategic moves and updating the map...');
+      setThinkingActivity('Executing strategic maneuvers and updating the map...');
       const stopCycle2 = startThinkingCycle();
 
       try {
         const resRes = await stepSimulation(false, isConnected, 'resolution');
-        if (isCancelledFn && isCancelledFn()) return false;
-
         setWorldState(resRes.world_state);
         setEvents((prev) => [...prev, ...resRes.new_events]);
         handleNewEvents(resRes.new_events);
@@ -162,25 +166,25 @@ export function App() {
         setIsProcessing(false);
       }
 
-      if (isCancelledFn && isCancelledFn()) return false;
-
       // --- STAGE 3: SPECTATOR OBSERVATION PAUSE ---
       // "after the discussions, the kindgoms actions should be shown on the board and have update it,
       // wait a little, and then begin the next turn so i can watch it without losing what was going on.
       // when it is sped up, dont include the wait time"
-      const observationPauseMs = speed === 4 ? 0 : speed === 2 ? 1200 : 3200;
-      if (observationPauseMs > 0) {
-        await sleep(observationPauseMs);
-      }
+      const currentSpeedAfter = speedRef.current;
+      const observationPauseMs =
+        currentSpeedAfter === 4 ? 150 : currentSpeedAfter === 2 ? 1200 : 3200;
+      await sleep(observationPauseMs);
 
       return true;
-    },
-    [isConnected, speed, startThinkingCycle, handleNewEvents]
-  );
+    } finally {
+      isTurnRunningRef.current = false;
+      setIsProcessing(false);
+    }
+  }, [isConnected, startThinkingCycle, handleNewEvents]);
 
   // Step single phase
   const handleStepPhase = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isTurnRunningRef.current) return;
     setIsProcessing(true);
     const stopCycle = startThinkingCycle();
     try {
@@ -198,13 +202,13 @@ export function App() {
 
   // Step full turn with observable stages
   const handleStepTurn = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isTurnRunningRef.current) return;
     await playOneTurn();
   };
 
   // Reset game
   const handleReset = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isTurnRunningRef.current) return;
     setIsProcessing(true);
     setIsAutoPlaying(false);
     try {
@@ -228,21 +232,20 @@ export function App() {
 
   // Chained Auto-Play Loop (advances turn-by-turn smoothly through observable stages)
   useEffect(() => {
-    let isCancelled = false;
+    if (!isAutoPlaying) return;
+    let active = true;
 
     const runAutoPlayLoop = async () => {
-      while (!isCancelled && isAutoPlaying) {
-        const completed = await playOneTurn(() => isCancelled || !isAutoPlaying);
-        if (!completed) break;
+      while (active && isAutoPlayingRef.current) {
+        await playOneTurn();
+        if (!active || !isAutoPlayingRef.current) break;
       }
     };
 
-    if (isAutoPlaying) {
-      runAutoPlayLoop();
-    }
+    runAutoPlayLoop();
 
     return () => {
-      isCancelled = true;
+      active = false;
     };
   }, [isAutoPlaying, playOneTurn]);
 

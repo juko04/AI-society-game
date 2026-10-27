@@ -669,7 +669,54 @@ body {
 .clean-event-card.claim { border-left-color: #10b981; }
 .clean-event-card.recruit { border-left-color: #3b82f6; }
 .clean-event-card.develop { border-left-color: #f59e0b; }
-.clean-event-card.announcement, .clean-event-card.whisper { border-left-color: #8b5cf6; }
+.clean-event-card.move { border-left-color: #06b6d4; }
+.clean-event-card.announcement { border-left-color: #8b5cf6; }
+.clean-event-card.whisper, .clean-event-card.diplomacy, .clean-event-card.private_message { 
+  border-left-color: #ec4899; 
+  background: rgba(236, 72, 153, 0.08);
+}
+
+.event-dialogue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+  font-family: var(--font-game);
+  font-weight: 800;
+  font-size: 0.74rem;
+}
+
+.dialogue-sender {
+  background: rgba(236, 72, 153, 0.22);
+  color: #f472b6;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(236, 72, 153, 0.45);
+}
+
+.dialogue-arrow {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.dialogue-target {
+  background: rgba(59, 130, 246, 0.22);
+  color: #93c5fd;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.event-dialogue-quote {
+  font-style: italic;
+  color: #f8fafc;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  border-left: 2px solid #ec4899;
+  line-height: 1.45;
+}
 
 .event-top-info {
   display: flex;

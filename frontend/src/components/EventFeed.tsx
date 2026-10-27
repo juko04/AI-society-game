@@ -15,8 +15,14 @@ export const EventFeed: React.FC<EventFeedProps> = ({
   const filteredEvents = events.filter((e) => {
     if (filter === 'combat') return e.event_type === 'combat';
     if (filter === 'claim') return e.event_type === 'claim';
-    if (filter === 'recruit') return e.event_type === 'recruit';
-    if (filter === 'diplomacy') return e.event_type === 'announcement' || e.event_type === 'whisper';
+    if (filter === 'recruit') return e.event_type === 'recruit' || e.event_type === 'move';
+    if (filter === 'diplomacy')
+      return (
+        e.event_type === 'announcement' ||
+        e.event_type === 'whisper' ||
+        e.event_type === 'diplomacy' ||
+        e.event_type === 'private_message'
+      );
     return true;
   });
 
@@ -28,10 +34,15 @@ export const EventFeed: React.FC<EventFeedProps> = ({
         return '🚩';
       case 'recruit':
         return '🛡️';
+      case 'move':
+        return '🚶';
       case 'develop':
         return '🏗️';
       case 'announcement':
+        return '📢';
       case 'whisper':
+      case 'diplomacy':
+      case 'private_message':
         return '💬';
       case 'attrition':
         return '🌾';
@@ -63,10 +74,10 @@ export const EventFeed: React.FC<EventFeedProps> = ({
           }}
         >
           <option value="all">All Events</option>
+          <option value="diplomacy">AI Dialogue 💬</option>
           <option value="combat">Battles ⚔️</option>
           <option value="claim">Land Claims 🚩</option>
-          <option value="recruit">Recruits 🛡️</option>
-          <option value="diplomacy">Diplomacy 💬</option>
+          <option value="recruit">Maneuvers & Troops 🛡️</option>
         </select>
       </div>
 
@@ -82,6 +93,16 @@ export const EventFeed: React.FC<EventFeedProps> = ({
               .reverse()
               .map((event) => {
                 const isCombat = event.event_type === 'combat';
+                const isDialogue =
+                  event.event_type === 'diplomacy' ||
+                  event.event_type === 'whisper' ||
+                  event.event_type === 'private_message';
+                const isAnnouncement = event.event_type === 'announcement';
+
+                const details = event.details as Record<string, any> | undefined;
+                const senderName = details?.sender_name || event.source_nation_id?.toUpperCase();
+                const targetName = details?.target_name || event.target_nation_id?.toUpperCase() || 'All Realms';
+
                 return (
                   <div
                     key={event.event_id}
@@ -94,7 +115,8 @@ export const EventFeed: React.FC<EventFeedProps> = ({
                   >
                     <div className="event-top-info">
                       <span>
-                        {getEmoji(event.event_type)} TURN {event.turn} &bull; {event.event_type.toUpperCase()}
+                        {getEmoji(event.event_type)} TURN {event.turn} &bull;{' '}
+                        {isDialogue ? 'AI DIALOGUE' : isAnnouncement ? 'PROCLAMATION' : event.event_type.toUpperCase()}
                       </span>
                       {isCombat && (
                         <span style={{ color: '#f87171', fontWeight: 800 }}>
@@ -102,7 +124,32 @@ export const EventFeed: React.FC<EventFeedProps> = ({
                         </span>
                       )}
                     </div>
-                    <div>{event.summary}</div>
+
+                    {isDialogue ? (
+                      <div>
+                        <div className="event-dialogue-badge">
+                          <span className="dialogue-sender">👑 {senderName}</span>
+                          <span className="dialogue-arrow">➔</span>
+                          <span className="dialogue-target">🛡️ {targetName}</span>
+                        </div>
+                        <div className="event-dialogue-quote">
+                          "{details?.full_content || event.summary.replace(/^.*?:\s*"/, '').replace(/"$/, '')}"
+                        </div>
+                      </div>
+                    ) : isAnnouncement ? (
+                      <div>
+                        <div className="event-dialogue-badge">
+                          <span className="dialogue-sender">📢 {senderName}</span>
+                          <span className="dialogue-arrow">➔</span>
+                          <span className="dialogue-target">🌍 All Kingdoms</span>
+                        </div>
+                        <div className="event-dialogue-quote">
+                          "{details?.full_content || event.summary.replace(/^.*?:\s*"/, '').replace(/"$/, '')}"
+                        </div>
+                      </div>
+                    ) : (
+                      <div>{event.summary}</div>
+                    )}
                   </div>
                 );
               })

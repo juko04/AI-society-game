@@ -411,6 +411,39 @@ export class OfflineSimulationEngine {
                 details: { cost_gold: 30, yield_developed: isFood ? 'food' : 'gold' },
                 timestamp: this.nowIso(),
               });
+              continue;
+            }
+          }
+
+          // 5. Army Movement (relocate garrison units toward frontlines)
+          if (nation.territory_ids.length >= 2) {
+            for (const originId of nation.territory_ids) {
+              const originT = this.world.territories[originId];
+              if (originT && originT.stationed_military > 1) {
+                const destId = originT.adjacent_territory_ids.find(
+                  (adj) => nation.territory_ids.includes(adj) && adj !== originId
+                );
+                if (destId) {
+                  const destT = this.world.territories[destId];
+                  const moveCount = Math.max(1, originT.stationed_military - 1);
+                  originT.stationed_military -= moveCount;
+                  destT.stationed_military += moveCount;
+
+                  events.push({
+                    event_id: `evt_move_${this.world.turn}_${originId}_${destId}_${Date.now()}`,
+                    turn: this.world.turn,
+                    phase: 'resolution',
+                    event_type: 'move',
+                    summary: `${nation.name} relocated ${moveCount} units from ${originT.name} to reinforce ${destT.name}.`,
+                    source_nation_id: nation.id,
+                    target_nation_id: null,
+                    territory_id: destId,
+                    details: { origin: originId, target: destId, units: moveCount },
+                    timestamp: this.nowIso(),
+                  });
+                  break;
+                }
+              }
             }
           }
         }

@@ -7,6 +7,7 @@ Diplomacy Manager, Memory System, and Persistence.
 
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
+import asyncio
 
 from app.schemas.contracts import (
     WorldState,
@@ -28,6 +29,7 @@ class SimulationOrchestrator:
     """Master controller coordinating the simulation lifecycle."""
 
     def __init__(self):
+        self._lock = asyncio.Lock()
         self.persistence = PersistenceManager()
         self.diplomacy = DiplomacyManager()
         self.memory = MemoryManager()
@@ -101,49 +103,58 @@ class SimulationOrchestrator:
 
     async def step(self, full_turn: bool = False, stage: Optional[str] = None) -> SimulationStepResponse:
         """Advance the simulation by one phase, by stage ('diplomacy' | 'resolution'), or a full turn."""
-        if not self.world or not self.engine:
-            self.init_simulation()
+        async with self._lock:
+            if not self.world or not self.engine:
+                self.init_simulation()
 
-        initial_phase = self.world.phase
-        new_events: List[GameEvent] = []
+            initial_phase = self.world.phase
+            new_events: List[GameEvent] = []
 
-        if stage == "diplomacy":
-            # Stage 1: Yields / Upkeep then Diplomatic Announcements
-            if self.world.phase == "world_update":
-                evts = await self._step_single_phase()
-                new_events.extend(evts)
-            if self.world.phase == "diplomacy":
-                evts = await self._step_single_phase()
-                new_events.extend(evts)
-        elif stage == "resolution":
-            # Stage 2: Strategic Actions, Board Movements/Combat, and History Snapshot
-            if self.world.phase == "strategic_decisions":
-                evts = await self._step_single_phase()
-                new_events.extend(evts)
-            if self.world.phase == "resolution":
-                evts = await self._step_single_phase()
-                new_events.extend(evts)
-            if self.world.phase == "history_memory":
-                evts = await self._step_single_phase()
-                new_events.extend(evts)
-        elif full_turn:
-            # Execute entire 5-phase turn cycle
-            for _ in range(5):
-                phase_events = await self._step_single_phase()
-                new_events.extend(phase_events)
-        else:
-            new_events = await self._step_single_phase()
+            if stage == "diplomacy":
+                # Ensure world starts cleanly at world_update. If leftover in decisions/resolution, catch up:
+                while self.world.phase not in ("world_update", "diplomacy"):
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
+                if self.world.phase == "world_update":
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
+                if self.world.phase == "diplomacy":
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
 
-        self.persistence.record_events(new_events)
+            elif stage == "resolution":
+                # Ensure world is at strategic_decisions, then run through history_memory to complete turn
+                while self.world.phase not in ("strategic_decisions", "resolution", "history_memory"):
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
+                if self.world.phase == "strategic_decisions":
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
+                if self.world.phase == "resolution":
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
+                if self.world.phase == "history_memory":
+                    evts = await self._step_single_phase()
+                    new_events.extend(evts)
 
-        return SimulationStepResponse(
-            status="success",
-            previous_phase=initial_phase,
-            current_phase=self.world.phase,
-            current_turn=self.world.turn,
-            new_events=new_events,
-            world_state=self.world,
-        )
+            elif full_turn:
+                # Execute entire 5-phase turn cycle
+                for _ in range(5):
+                    phase_events = await self._step_single_phase()
+                    new_events.extend(phase_events)
+            else:
+                new_events = await self._step_single_phase()
+
+            self.persistence.record_events(new_events)
+
+            return SimulationStepResponse(
+                status="success",
+                previous_phase=initial_phase,
+                current_phase=self.world.phase,
+                current_turn=self.world.turn,
+                new_events=new_events,
+                world_state=self.world,
+            )
 
     async def _step_single_phase(self) -> List[GameEvent]:
         """Advance exactly one phase in the state machine."""
@@ -157,7 +168,7 @@ class SimulationOrchestrator:
             self.world.phase = "diplomacy"
 
         elif phase == "diplomacy":
-            # Phase 2: AI communication
+            # Phase 2: AI communication & directed dialogue
             for nation_id, agent in self.agents.items():
                 nation = self.world.nations.get(nation_id)
                 if not nation or not nation.is_alive:
@@ -168,16 +179,29 @@ class SimulationOrchestrator:
                 messages = await agent.generate_diplomacy(obs)
                 for msg in messages:
                     self.diplomacy.messages.append(msg)
+                    target_nation = self.world.nations.get(msg.recipient_id) if msg.recipient_id else None
+                    if target_nation:
+                        summary = f"{nation.name} to {target_nation.name}: \"{msg.content}\""
+                        evt_type = "whisper" if msg.is_private else "diplomacy"
+                    else:
+                        summary = f"{nation.name} to All Kingdoms: \"{msg.content}\""
+                        evt_type = "announcement"
+
                     events.append(
                         GameEvent(
                             event_id=f"evt_msg_{self.world.turn}_{msg.message_id}",
                             turn=self.world.turn,
                             phase="diplomacy",
-                            event_type="announcement" if not msg.is_private else "private_message",
-                            summary=f"{nation.name}: \"{msg.content[:60]}...\"",
+                            event_type=evt_type,
+                            summary=summary,
                             source_nation_id=nation.id,
                             target_nation_id=msg.recipient_id,
-                            details={"full_content": msg.content, "is_private": msg.is_private},
+                            details={
+                                "full_content": msg.content,
+                                "is_private": msg.is_private,
+                                "sender_name": nation.name,
+                                "target_name": target_nation.name if target_nation else "All Kingdoms",
+                            },
                             timestamp=self._now_iso(),
                         )
                     )

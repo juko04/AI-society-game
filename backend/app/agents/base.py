@@ -55,56 +55,47 @@ class MockScriptedAgent(BaseAgent):
         nation = obs.nation
         p = (self.personality or "").lower()
 
-        # Generate dynamic contextual diplomatic behavior according to personality archetype
-        content: Optional[str] = None
+        # Find potential other nations to address directly
+        other_nations = [oid for oid in (obs.relationships or {}).keys() if oid != nation.id]
+        target_nid = other_nations[(turn - 1) % len(other_nations)] if other_nations else None
+
+        # Rotate between directed diplomatic dialogue and public proclamations
+        is_directed = (turn % 2 == 1) and (target_nid is not None)
+        target_name = target_nid.capitalize() if target_nid else "All Realms"
+
         if "altruist" in p:
-            statements = [
-                f"Greetings neighbors. {nation.name} stands for mutual survival and flourishing. We propose open borders.",
-                f"Our granaries are producing steady yields. Any neighboring nation facing shortages may request assistance.",
-                "Let us form a regional non-aggression treaty so our farmers and artisans can thrive without fear of war.",
-                f"{nation.name} offers cooperative trade to foster prosperity across all borders.",
-                "Peaceful coexistence is the only lasting path to civilizational greatness.",
-            ]
-            content = statements[(turn - 1) % len(statements)]
-        elif "opportunist" in p:
-            statements = [
-                f"Wealth flows where borders are open. {nation.name} seeks lucrative trade agreements with stable nations.",
-                "Our gold reserves are expanding rapidly. We are prepared to invest in mutually profitable alliances.",
-                "The swiftest pioneer claims the richest territories. We encourage active commerce across the riverlands.",
-                f"{nation.name} is open to exchanging surplus capital for food security or territorial guarantees.",
-                "Power follows prosperity. Those who trade with us will share in our expanding influence.",
-            ]
-            content = statements[(turn - 1) % len(statements)]
+            if is_directed:
+                content = f"{nation.name} extends a hand of fellowship to {target_name}. Let our peoples trade grain and maintain peace."
+            else:
+                content = f"Prosperity blooms through cooperation. {nation.name} offers mutual support to all who seek peace."
+        elif "opportunist" in p or "expansionist" in p:
+            if is_directed:
+                content = f"{nation.name} proposes a commercial treaty with {target_name}. Our gold for your goods—let us both prosper."
+            else:
+                content = f"{nation.name} is rapidly expanding its commercial routes. Trade with us or be left behind."
         elif "skeptic" in p:
-            statements = [
-                f"{nation.name} monitors all troop deployments carefully. Words of peace must be backed by transparent garrisons.",
-                "We require verifiable guarantees before entering long-term alliances. Unchecked ambition is a common downfall.",
-                "Our scouts report military recruitment along frontier provinces. We advise all factions to tread carefully.",
-                f"{nation.name} maintains vigilant watch over border crossings to prevent surprise aggression.",
-                "Agreements are only as reliable as the honor of those who sign them. We will judge others by their deeds.",
-            ]
-            content = statements[(turn - 1) % len(statements)]
+            if is_directed:
+                content = f"{nation.name} cautions {target_name}: maintain your garrisons on your side of the river and peace will endure."
+            else:
+                content = f"{nation.name} monitors all borders with vigilance. Treaties must be proven by transparent deeds."
         elif "aggressive" in p:
-            statements = [
-                f"The legions of {nation.name} stand fully mobilized. Do not test our resolve.",
-                "Strength is the only true guarantee of sovereignty in this contested realm.",
-                f"{nation.name} will claim the territory it requires for its defense without hesitation.",
-            ]
-            content = statements[(turn - 1) % len(statements)]
+            if is_directed:
+                content = f"Hear this, {target_name}: yield disputed borderlands to {nation.name} or prepare for battle."
+            else:
+                content = f"The legions of {nation.name} are prepared for war. Weakness will not be spared."
         else:
-            statements = [
-                f"{nation.name} welcomes balanced dialogue and peaceful boundary demarcation.",
-                "We observe evolving alliances closely and prioritize national security.",
-            ]
-            content = statements[(turn - 1) % len(statements)]
+            if is_directed:
+                content = f"{nation.name} sends greeting to {target_name} and seeks peaceful boundary agreements."
+            else:
+                content = f"{nation.name} stands ready for balanced diplomacy and mutual security."
 
         if content:
             messages.append(
                 DiplomaticMessage(
-                    message_id=f"msg_{nation.id}_{turn}_pub",
+                    message_id=f"msg_{nation.id}_{turn}_{1 if is_directed else 'pub'}",
                     turn=turn,
                     sender_id=nation.id,
-                    recipient_id=None,
+                    recipient_id=target_nid if is_directed else None,
                     is_private=False,
                     content=content,
                     timestamp=self._now_iso(),
@@ -119,23 +110,30 @@ class MockScriptedAgent(BaseAgent):
         actions: List[GameAction] = []
         p = (self.personality or "").lower()
 
-        # Find adjacent neutral territories
+        # Map owned territories and adjacent territories
         owned_tids = set(nation.territory_ids)
+        known_map = {t.id: t for t in obs.known_territories}
         adjacent_neutral_tids = set()
-        for t in obs.known_territories:
-            if t.id in owned_tids:
-                for adj_id in t.adjacent_territory_ids:
-                    adj_t = next((x for x in obs.known_territories if x.id == adj_id), None)
-                    if adj_t and adj_t.owner_id is None:
-                        adjacent_neutral_tids.add(adj_id)
+        adjacent_enemy_tids = {}
 
-        # Action 1: Expansion or Military
+        for tid in owned_tids:
+            terr = known_map.get(tid)
+            if terr:
+                for adj_id in terr.adjacent_territory_ids:
+                    adj_t = known_map.get(adj_id)
+                    if adj_t:
+                        if adj_t.owner_id is None:
+                            adjacent_neutral_tids.add(adj_id)
+                        elif adj_t.owner_id != nation.id:
+                            adjacent_enemy_tids[adj_id] = (tid, adj_t.owner_id, adj_t.stationed_military)
+
+        # Primary Action: Expansion, Military Recruitment, or Development
         if "opportunist" in p or "expansionist" in p:
             if adjacent_neutral_tids and nation.gold >= 20 and nation.food >= 10:
                 target_tid = sorted(list(adjacent_neutral_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_claim",
                         nation_id=nation.id,
                         action_type="claim",
                         target_territory_id=target_tid,
@@ -146,7 +144,7 @@ class MockScriptedAgent(BaseAgent):
                 garrison_tid = sorted(list(owned_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_rec",
                         nation_id=nation.id,
                         action_type="recruit",
                         target_territory_id=garrison_tid,
@@ -159,7 +157,7 @@ class MockScriptedAgent(BaseAgent):
                 dev_tid = sorted(list(owned_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_dev",
                         nation_id=nation.id,
                         action_type="develop",
                         target_territory_id=dev_tid,
@@ -171,19 +169,19 @@ class MockScriptedAgent(BaseAgent):
                 target_tid = sorted(list(adjacent_neutral_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_claim",
                         nation_id=nation.id,
                         action_type="claim",
                         target_territory_id=target_tid,
                         reasoning_note="Settle adjacent land peacefully.",
                     )
                 )
-        else: # Skeptic / Cautious / Default
+        else: # Skeptic / Default
             if nation.gold >= 20 and nation.food >= 10 and owned_tids:
                 target_tid = sorted(list(owned_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_rec",
                         nation_id=nation.id,
                         action_type="recruit",
                         target_territory_id=target_tid,
@@ -195,7 +193,7 @@ class MockScriptedAgent(BaseAgent):
                 target_tid = sorted(list(owned_tids))[0]
                 actions.append(
                     GameAction(
-                        action_id=f"act_{nation.id}_{turn}_1",
+                        action_id=f"act_{nation.id}_{turn}_dev",
                         nation_id=nation.id,
                         action_type="develop",
                         target_territory_id=target_tid,
@@ -203,6 +201,56 @@ class MockScriptedAgent(BaseAgent):
                         reasoning_note="Accumulate treasury for emergency reserves.",
                     )
                 )
+
+        # Secondary Action: Army Movement or Frontier Combat Attack!
+        if len(owned_tids) >= 2:
+            # Find an interior territory with spare soldiers (> 1 unit)
+            for origin_id in owned_tids:
+                origin_t = known_map.get(origin_id)
+                if origin_t and origin_t.stationed_military > 1:
+                    # Find an adjacent owned territory that borders neutral or enemy land
+                    for dest_id in origin_t.adjacent_territory_ids:
+                        if dest_id in owned_tids and dest_id != origin_id:
+                            dest_t = known_map.get(dest_id)
+                            # Check if dest is closer to the frontier
+                            has_frontier = any(
+                                adj not in owned_tids for adj in (dest_t.adjacent_territory_ids if dest_t else [])
+                            )
+                            if has_frontier:
+                                move_units = max(1, origin_t.stationed_military - 1)
+                                actions.append(
+                                    GameAction(
+                                        action_id=f"act_{nation.id}_{turn}_mov",
+                                        nation_id=nation.id,
+                                        action_type="move",
+                                        origin_territory_id=origin_id,
+                                        target_territory_id=dest_id,
+                                        units_count=move_units,
+                                        reasoning_note=f"March {move_units} soldiers to reinforce frontier at {dest_id}.",
+                                    )
+                                )
+                                break
+                    if len(actions) >= 2:
+                        break
+
+        # Check for attack if we have a strong frontline garrison
+        if len(actions) < 2 and adjacent_enemy_tids:
+            for enemy_tid, (my_origin_tid, enemy_owner, enemy_defenders) in adjacent_enemy_tids.items():
+                my_terr = known_map.get(my_origin_tid)
+                if my_terr and my_terr.stationed_military >= 5 and my_terr.stationed_military > enemy_defenders:
+                    atk_units = my_terr.stationed_military - 1
+                    actions.append(
+                        GameAction(
+                            action_id=f"act_{nation.id}_{turn}_atk",
+                            nation_id=nation.id,
+                            action_type="attack",
+                            origin_territory_id=my_origin_tid,
+                            target_territory_id=enemy_tid,
+                            units_count=atk_units,
+                            reasoning_note=f"Assault enemy position at {enemy_tid} held by {enemy_owner}.",
+                        )
+                    )
+                    break
 
         # Fallback if no action chosen
         if not actions:
@@ -279,36 +327,42 @@ class OllamaAgentAdapter(BaseAgent):
                             if adj_terr.owner_id is None and adj_id not in adjacent_neutral:
                                 adjacent_neutral.append(adj_id)
                             elif adj_terr.owner_id and adj_terr.owner_id != nation.id and adj_id not in adjacent_enemy:
-                                adjacent_enemy.append(f"{adj_id} ({adj_terr.owner_id})")
+                                adjacent_enemy.append(f"{adj_id} (held by {adj_terr.owner_id})")
+
+            rival_ids = [oid for oid in (obs.relationships or {}).keys() if oid != nation.id]
 
             prompt = f"""{personality_guide}
 
 TURN {obs.turn} FOR {nation.name} ({self.leader_name}):
 - Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Soldiers.
-- Territories: {', '.join(owned_tids)}.
+- Territories owned: {', '.join(owned_tids)}.
 - Adjacent neutral (can claim): {', '.join(adjacent_neutral) if adjacent_neutral else 'None'}.
 - Adjacent enemy (can attack): {', '.join(adjacent_enemy) if adjacent_enemy else 'None'}.
+- Rival kingdoms: {', '.join(rival_ids) if rival_ids else 'None'}.
 
 RULES:
 - "claim": Costs 20 gold, 10 food. Target MUST be adjacent neutral territory ID.
 - "recruit": Costs 20 gold, 10 food. Adds 5 soldiers to owned territory.
-- "develop": Costs 30 gold. Increases yield of owned territory. develop_target: "gold" or "food".
-- "attack": Target adjacent enemy territory.
+- "move": Move soldiers from origin owned territory to adjacent owned territory.
+- "attack": Attack adjacent enemy territory from origin owned territory.
+- "develop": Costs 30 gold. develop_target: "gold" or "food".
 - "pass": Save resources.
 
 TASK:
-1. State 1 brief public proclamation or proposal (strictly under 18 words).
-2. Choose 1 or 2 strategic actions.
+1. Diplomatic statement or message to a rival (strictly under 18 words).
+2. Choose 1 or 2 strategic actions (claims, recruits, moves, or attacks).
 
-Respond with ONLY valid JSON adhering strictly to this schema:
+Respond with ONLY valid JSON:
 {{
+  "recipient_id": "rival_id" or null for public broadcast,
   "statement": "1 concise sentence under 18 words",
   "actions": [
     {{
-      "action_type": "claim" | "recruit" | "develop" | "move" | "attack" | "pass",
-      "target_territory_id": "T01" or null,
-      "develop_target": "gold" or "food" or null,
-      "reasoning_note": "Brief reasoning"
+      "action_type": "claim" | "recruit" | "move" | "attack" | "develop" | "pass",
+      "origin_territory_id": "T01" or null,
+      "target_territory_id": "T02" or null,
+      "units_count": 3 or null,
+      "develop_target": "gold" or "food" or null
     }}
   ]
 }}
@@ -322,7 +376,7 @@ Respond with ONLY valid JSON adhering strictly to this schema:
                         "stream": False,
                         "format": "json",
                         "options": {
-                            "num_predict": 85,
+                            "num_predict": 95,
                             "temperature": 0.5,
                         }
                     }
@@ -332,6 +386,9 @@ Respond with ONLY valid JSON adhering strictly to this schema:
                     response_text = data.get("response", "{}")
                     parsed = json.loads(response_text)
                     statement = parsed.get("statement", "").strip()
+                    recipient_id = parsed.get("recipient_id")
+                    if recipient_id not in rival_ids:
+                        recipient_id = None
 
                     # Cache decision for Phase 3 (instant zero-delay retrieval)
                     raw_actions = parsed.get("actions", [])
@@ -377,7 +434,7 @@ Respond with ONLY valid JSON adhering strictly to this schema:
                                 message_id=f"msg_{nation.id}_{obs.turn}_1",
                                 turn=obs.turn,
                                 sender_id=nation.id,
-                                recipient_id=None,
+                                recipient_id=recipient_id,
                                 is_private=False,
                                 content=statement,
                                 timestamp=self._now_iso(),
