@@ -24,6 +24,10 @@ import sampleEventsFixture from '../../fixtures/sample_events.json';
 
 export function App() {
   const [worldState, setWorldState] = useState<WorldState>(sampleWorldFixture as unknown as WorldState);
+  const worldStateRef = useRef<WorldState>(worldState);
+  useEffect(() => {
+    worldStateRef.current = worldState;
+  }, [worldState]);
   const [events, setEvents] = useState<GameEvent[]>(sampleEventsFixture as unknown as GameEvent[]);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [selectedNationId, setSelectedNationId] = useState<string | null>(null);
@@ -50,6 +54,8 @@ export function App() {
 
   // Load initial state
   const loadData = useCallback(async () => {
+    // If a turn is actively progressing in auto-play or processing, skip background poll to avoid race conditions
+    if (isAutoPlayingRef.current || isTurnRunningRef.current) return;
     try {
       await fetchHealth();
       setIsConnected(true);
@@ -100,25 +106,41 @@ export function App() {
   );
 
   const startThinkingCycle = useCallback(() => {
-    const aliveNations = Object.values(worldState.nations || {}).filter((n) => n.is_alive);
+    const currentNations = worldStateRef.current.nations || {};
+    const aliveNations = Object.values(currentNations).filter((n) => n.is_alive);
     if (aliveNations.length === 0) return () => {};
     let idx = 0;
     setThinkingNation(aliveNations[0]);
-    setThinkingActivity('Formulating diplomatic announcements...');
+    setThinkingActivity('Civilizations are conducting diplomatic council...');
 
     const interval = window.setInterval(() => {
-      idx = (idx + 1) % aliveNations.length;
-      setThinkingNation(aliveNations[idx]);
-    }, Math.max(300, Math.floor(1200 / (speedRef.current || 1))));
+      const nowNations = worldStateRef.current.nations || {};
+      const nowAlive = Object.values(nowNations).filter((n) => n.is_alive);
+      if (nowAlive.length > 0) {
+        idx = (idx + 1) % nowAlive.length;
+        setThinkingNation(nowAlive[idx]);
+      }
+    }, Math.max(250, Math.floor(1000 / (speedRef.current || 1))));
 
     return () => {
       clearInterval(interval);
       setThinkingNation(null);
       setThinkingActivity(null);
     };
-  }, [worldState.nations]);
+  }, []);
 
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  // Responsive interruptible breather that aborts immediately if paused
+  const sleepWithCheck = (ms: number) => {
+    return new Promise<void>((resolve) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (!isAutoPlayingRef.current || Date.now() - start >= ms) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 40);
+    });
+  };
 
   // Plays a full turn in observable stages:
   // Stage 1: Yields & Discussions (AI generates diplomatic speech & plans moves)
@@ -148,7 +170,11 @@ export function App() {
       // Reading pause for discussions (at 4x speed: 120ms tick so React flushes DOM updates)
       const currentSpeed = speedRef.current;
       const dipPauseMs = currentSpeed === 4 ? 120 : Math.max(300, Math.floor(1500 / currentSpeed));
-      await sleep(dipPauseMs);
+      await sleepWithCheck(dipPauseMs);
+
+      if (!isAutoPlayingRef.current) {
+        return true;
+      }
 
       // --- STAGE 2: ACTIONS & BOARD RESOLUTION ---
       setIsProcessing(true);
@@ -168,13 +194,10 @@ export function App() {
       }
 
       // --- STAGE 3: SPECTATOR OBSERVATION PAUSE ---
-      // "after the discussions, the kindgoms actions should be shown on the board and have update it,
-      // wait a little, and then begin the next turn so i can watch it without losing what was going on.
-      // when it is sped up, dont include the wait time"
       const currentSpeedAfter = speedRef.current;
       const observationPauseMs =
         currentSpeedAfter === 4 ? 150 : currentSpeedAfter === 2 ? 1200 : 3200;
-      await sleep(observationPauseMs);
+      await sleepWithCheck(observationPauseMs);
 
       return true;
     } finally {
@@ -268,24 +291,44 @@ export function App() {
     }
   };
 
-  // Chained Auto-Play Loop (advances turn-by-turn smoothly through observable stages)
+  const playOneTurnRef = useRef<() => Promise<boolean>>(() => Promise.resolve(false));
+  useEffect(() => {
+    playOneTurnRef.current = playOneTurn;
+  }, [playOneTurn]);
+
+  // Robust Auto-Play Scheduler with guaranteed event-loop frame yielding
   useEffect(() => {
     if (!isAutoPlaying) return;
-    let active = true;
+    let cancelled = false;
+    let timerId: number | null = null;
 
-    const runAutoPlayLoop = async () => {
-      while (active && isAutoPlayingRef.current) {
-        await playOneTurn();
-        if (!active || !isAutoPlayingRef.current) break;
+    const executeNextTurn = async () => {
+      if (cancelled || !isAutoPlayingRef.current) return;
+
+      try {
+        await playOneTurnRef.current();
+      } catch (err) {
+        console.error('Auto-play turn error:', err);
       }
+
+      if (cancelled || !isAutoPlayingRef.current) return;
+
+      // Ensure the browser main thread always yields and paints between turns
+      const currentSpeed = speedRef.current;
+      const interTurnDelay = currentSpeed === 4 ? 180 : currentSpeed === 2 ? 600 : 1200;
+      timerId = window.setTimeout(executeNextTurn, interTurnDelay);
     };
 
-    runAutoPlayLoop();
+    // Kick off turn after a brief frame tick to ensure clean render
+    timerId = window.setTimeout(executeNextTurn, 60);
 
     return () => {
-      active = false;
+      cancelled = true;
+      if (timerId !== null) {
+        clearTimeout(timerId);
+      }
     };
-  }, [isAutoPlaying, playOneTurn]);
+  }, [isAutoPlaying]);
 
   // Keyboard controls (Space = play/pause, ArrowRight = step, T = turn, R = reset)
   useEffect(() => {
