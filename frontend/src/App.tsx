@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { SimulationControls } from './components/SimulationControls';
 import { CivilizationList } from './components/CivilizationList';
@@ -32,8 +32,8 @@ export function App() {
   const [speed, setSpeed] = useState<number>(1);
   const [isMuted, setIsMuted] = useState<boolean>(soundService.isMuted());
   const [activeCombatEvent, setActiveCombatEvent] = useState<GameEvent | null>(null);
-
-  const autoPlayRef = useRef<number | null>(null);
+  const [thinkingNation, setThinkingNation] = useState<{ id: string; name: string; leader_name: string; color: string } | null>(null);
+  const [thinkingActivity, setThinkingActivity] = useState<string | null>(null);
 
   // Load initial state
   const loadData = useCallback(async () => {
@@ -77,10 +77,30 @@ export function App() {
     }
   };
 
+  const startThinkingCycle = useCallback(() => {
+    const aliveNations = Object.values(worldState.nations || {}).filter((n) => n.is_alive);
+    if (aliveNations.length === 0) return () => {};
+    let idx = 0;
+    setThinkingNation(aliveNations[0]);
+    setThinkingActivity('Formulating diplomatic messages and strategic moves...');
+
+    const interval = window.setInterval(() => {
+      idx = (idx + 1) % aliveNations.length;
+      setThinkingNation(aliveNations[idx]);
+    }, Math.max(700, Math.floor(1800 / speed)));
+
+    return () => {
+      clearInterval(interval);
+      setThinkingNation(null);
+      setThinkingActivity(null);
+    };
+  }, [worldState.nations, speed]);
+
   // Step single phase
   const handleStepPhase = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
+    const stopCycle = startThinkingCycle();
     try {
       const res = await stepSimulation(false, isConnected);
       setWorldState(res.world_state);
@@ -89,6 +109,7 @@ export function App() {
     } catch (err) {
       console.error('Failed to step phase:', err);
     } finally {
+      stopCycle();
       setIsProcessing(false);
     }
   };
@@ -97,6 +118,7 @@ export function App() {
   const handleStepTurn = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
+    const stopCycle = startThinkingCycle();
     try {
       const res = await stepSimulation(true, isConnected);
       setWorldState(res.world_state);
@@ -105,6 +127,7 @@ export function App() {
     } catch (err) {
       console.error('Failed to step turn:', err);
     } finally {
+      stopCycle();
       setIsProcessing(false);
     }
   };
@@ -133,29 +156,46 @@ export function App() {
     setIsAutoPlaying((prev) => !prev);
   };
 
+  // Chained Auto-Play Loop (advances turn-by-turn smoothly with thinking animations)
   useEffect(() => {
-    if (isAutoPlaying) {
-      const intervalMs = Math.max(350, Math.floor(1300 / speed));
-      autoPlayRef.current = window.setInterval(async () => {
-        try {
-          const res = await stepSimulation(false, isConnected);
+    let isCancelled = false;
+    let timeoutId: number | null = null;
+
+    const runAutoPlayLoop = async () => {
+      if (isCancelled || !isAutoPlaying) return;
+      setIsProcessing(true);
+      const stopCycle = startThinkingCycle();
+
+      try {
+        const res = await stepSimulation(true, isConnected);
+        if (!isCancelled) {
           setWorldState(res.world_state);
           setEvents((prev) => [...prev, ...res.new_events]);
           handleNewEvents(res.new_events);
-        } catch {
-          setIsAutoPlaying(false);
         }
-      }, intervalMs);
-    } else {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current);
-        autoPlayRef.current = null;
+      } catch (err) {
+        console.error('Auto-play error:', err);
+        setIsAutoPlaying(false);
+      } finally {
+        stopCycle();
+        setIsProcessing(false);
+        if (!isCancelled && isAutoPlaying) {
+          // Delay before next turn based on speed multiplier
+          const delayMs = Math.max(900, Math.floor(2500 / speed));
+          timeoutId = window.setTimeout(runAutoPlayLoop, delayMs);
+        }
       }
-    }
-    return () => {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     };
-  }, [isAutoPlaying, isConnected, speed]);
+
+    if (isAutoPlaying) {
+      runAutoPlayLoop();
+    }
+
+    return () => {
+      isCancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isAutoPlaying, isConnected, speed, startThinkingCycle]);
 
   // Keyboard controls (Space = play/pause, ArrowRight = step, T = turn, R = reset)
   useEffect(() => {
@@ -210,6 +250,8 @@ export function App() {
         onSpeedChange={setSpeed}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
+        thinkingNation={thinkingNation}
+        thinkingActivity={thinkingActivity}
       />
 
       {/* Clean 3-Column Game Board Layout */}
@@ -219,6 +261,7 @@ export function App() {
           nations={nationsList}
           selectedNationId={selectedNationId}
           onSelectNation={(id) => setSelectedNationId(id === selectedNationId ? null : id)}
+          thinkingNationId={thinkingNation?.id || null}
         />
 
         {/* Center: The Game Board (Vector Risk Map) */}

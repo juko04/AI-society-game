@@ -131,6 +131,8 @@ export interface WorldState {
   territories: Record<string, Territory>;
   is_paused: boolean;
   speed: number;
+  active_thinking_nation_id?: string | null;
+  active_thinking_activity?: string | null;
 }
 
 export interface AgentObservation {

@@ -13,6 +13,8 @@ interface SimulationControlsProps {
   onSpeedChange: (speed: number) => void;
   isMuted: boolean;
   onToggleMute: () => void;
+  thinkingNation?: { id: string; name: string; leader_name: string; color: string } | null;
+  thinkingActivity?: string | null;
 }
 
 export const SimulationControls: React.FC<SimulationControlsProps> = ({
@@ -26,6 +28,8 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
   onSpeedChange,
   isMuted,
   onToggleMute,
+  thinkingNation,
+  thinkingActivity,
 }) => {
   return (
     <div className="controls-bar">
@@ -113,6 +117,31 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
           {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       </div>
+
+      {/* Prominent AI Thinking Indicator */}
+      {(isProcessing || thinkingNation) && (
+        <div className="ai-thinking-banner">
+          <span className="brain-pulse-icon">🧠</span>
+          <span
+            className="thinking-nation-badge"
+            style={{
+              backgroundColor: thinkingNation?.color ? `${thinkingNation.color}33` : '#3b82f633',
+              color: thinkingNation?.color || '#93c5fd',
+              borderColor: thinkingNation?.color || '#3b82f6',
+            }}
+          >
+            {thinkingNation ? `${thinkingNation.name} (${thinkingNation.leader_name})` : 'AI Society'}
+          </span>
+          <span className="thinking-activity-text">
+            {thinkingActivity || 'Thinking strategic doctrine...'}
+          </span>
+          <span className="thinking-dots">
+            <span>•</span>
+            <span>•</span>
+            <span>•</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,10 +6,11 @@ and OllamaAgentAdapter (connects to Qwen3 via Ollama when local AI is active).
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
-import random
+import json
 import httpx
 from datetime import datetime, timezone
+from typing import List, Optional
+import random
 
 from app.schemas.contracts import (
     AgentObservation,
@@ -54,46 +55,61 @@ class MockScriptedAgent(BaseAgent):
         nation = obs.nation
         p = (self.personality or "").lower()
 
-        # Generate contextual diplomatic behavior according to personality archetype
+        # Generate dynamic contextual diplomatic behavior according to personality archetype
+        content: Optional[str] = None
         if "altruist" in p:
-            if turn == 1:
-                messages.append(
-                    DiplomaticMessage(
-                        message_id=f"msg_{nation.id}_{turn}_pub",
-                        turn=turn,
-                        sender_id=nation.id,
-                        recipient_id=None,
-                        is_private=False,
-                        content=f"Greetings neighbors. {nation.name} stands for mutual survival and flourishing. We propose open borders and non-aggression.",
-                        timestamp=self._now_iso(),
-                    )
-                )
+            statements = [
+                f"Greetings neighbors. {nation.name} stands for mutual survival and flourishing. We propose open borders.",
+                f"Our granaries are producing steady yields. Any neighboring nation facing shortages may request assistance.",
+                "Let us form a regional non-aggression treaty so our farmers and artisans can thrive without fear of war.",
+                f"{nation.name} offers cooperative trade to foster prosperity across all borders.",
+                "Peaceful coexistence is the only lasting path to civilizational greatness.",
+            ]
+            content = statements[(turn - 1) % len(statements)]
         elif "opportunist" in p:
-            if turn % 2 == 1:
-                messages.append(
-                    DiplomaticMessage(
-                        message_id=f"msg_{nation.id}_{turn}_pub",
-                        turn=turn,
-                        sender_id=nation.id,
-                        recipient_id=None,
-                        is_private=False,
-                        content=f"Wealth flows where borders are open. {nation.name} seeks lucrative trade agreements with stable nations.",
-                        timestamp=self._now_iso(),
-                    )
-                )
+            statements = [
+                f"Wealth flows where borders are open. {nation.name} seeks lucrative trade agreements with stable nations.",
+                "Our gold reserves are expanding rapidly. We are prepared to invest in mutually profitable alliances.",
+                "The swiftest pioneer claims the richest territories. We encourage active commerce across the riverlands.",
+                f"{nation.name} is open to exchanging surplus capital for food security or territorial guarantees.",
+                "Power follows prosperity. Those who trade with us will share in our expanding influence.",
+            ]
+            content = statements[(turn - 1) % len(statements)]
         elif "skeptic" in p:
-            if turn == 1:
-                messages.append(
-                    DiplomaticMessage(
-                        message_id=f"msg_{nation.id}_{turn}_pub",
-                        turn=turn,
-                        sender_id=nation.id,
-                        recipient_id=None,
-                        is_private=False,
-                        content=f"{nation.name} monitors all troop deployments carefully. Words of peace must be backed by transparent garrisons.",
-                        timestamp=self._now_iso(),
-                    )
+            statements = [
+                f"{nation.name} monitors all troop deployments carefully. Words of peace must be backed by transparent garrisons.",
+                "We require verifiable guarantees before entering long-term alliances. Unchecked ambition is a common downfall.",
+                "Our scouts report military recruitment along frontier provinces. We advise all factions to tread carefully.",
+                f"{nation.name} maintains vigilant watch over border crossings to prevent surprise aggression.",
+                "Agreements are only as reliable as the honor of those who sign them. We will judge others by their deeds.",
+            ]
+            content = statements[(turn - 1) % len(statements)]
+        elif "aggressive" in p:
+            statements = [
+                f"The legions of {nation.name} stand fully mobilized. Do not test our resolve.",
+                "Strength is the only true guarantee of sovereignty in this contested realm.",
+                f"{nation.name} will claim the territory it requires for its defense without hesitation.",
+            ]
+            content = statements[(turn - 1) % len(statements)]
+        else:
+            statements = [
+                f"{nation.name} welcomes balanced dialogue and peaceful boundary demarcation.",
+                "We observe evolving alliances closely and prioritize national security.",
+            ]
+            content = statements[(turn - 1) % len(statements)]
+
+        if content:
+            messages.append(
+                DiplomaticMessage(
+                    message_id=f"msg_{nation.id}_{turn}_pub",
+                    turn=turn,
+                    sender_id=nation.id,
+                    recipient_id=None,
+                    is_private=False,
+                    content=content,
+                    timestamp=self._now_iso(),
                 )
+            )
 
         return messages
 
@@ -211,9 +227,10 @@ class MockScriptedAgent(BaseAgent):
 
 
 class OllamaAgentAdapter(BaseAgent):
-    """Adapter connecting to local Ollama server (Qwen3 8B / 4B).
+    """Adapter connecting to local Ollama server (Qwen 2.5 / Qwen 3).
 
-    Includes graceful fallback to MockScriptedAgent if the Ollama endpoint is offline.
+    Sends structured prompts with format="json", enforces valid action schemas,
+    and includes graceful fallback to MockScriptedAgent if the Ollama endpoint is offline.
     """
 
     def __init__(
@@ -222,32 +239,188 @@ class OllamaAgentAdapter(BaseAgent):
         leader_name: str,
         personality: Optional[str] = None,
         ollama_url: str = "http://localhost:11434",
-        model_name: str = "qwen3:8b",
+        model_name: str = "qwen2.5:7b",
     ):
         super().__init__(nation_id, leader_name, personality)
         self.ollama_url = ollama_url
         self.model_name = model_name
         self.fallback = MockScriptedAgent(nation_id, leader_name, personality)
 
+    def _now_iso(self) -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    def _get_personality_guidance(self) -> str:
+        try:
+            from app.agents.personalities import create_personality_prompt
+            return create_personality_prompt(self.personality)
+        except Exception:
+            return f"You are {self.leader_name}, ruler of your nation. Your personality archetype is: {self.personality}."
+
     async def generate_diplomacy(self, obs: AgentObservation) -> List[DiplomaticMessage]:
         try:
-            # When Ollama is available, query model with structured prompt
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.get(f"{self.ollama_url}/api/tags")
+            nation = obs.nation
+            personality_guide = self._get_personality_guidance()
+
+            prompt = f"""{personality_guide}
+
+CURRENT SIMULATION STATE (Turn {obs.turn}):
+- You are {self.leader_name}, leader of {nation.name}.
+- Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Soldiers.
+- Controlled territories: {', '.join(nation.territory_ids)}.
+- High-level goals: {', '.join(obs.current_goals)}.
+
+DIPLOMATIC PHASE:
+You may broadcast a statement to all nations or send a private diplomatic message to a rival.
+Respond with ONLY valid JSON adhering strictly to this schema:
+{{
+  "messages": [
+    {{
+      "recipient_id": "nation_id" or null for public broadcast,
+      "is_private": false,
+      "content": "Your statement or proposal here"
+    }}
+  ]
+}}
+If you choose not to speak this turn, return {{"messages": []}}.
+"""
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                res = await client.post(
+                    f"{self.ollama_url}/api/generate",
+                    json={
+                        "model": self.model_name,
+                        "prompt": prompt,
+                        "stream": False,
+                        "format": "json"
+                    }
+                )
                 if res.status_code == 200:
-                    # In Phase 2, Julian will complete full prompt serialization here
-                    pass
+                    data = res.json()
+                    response_text = data.get("response", "{}")
+                    parsed = json.loads(response_text)
+                    msgs: List[DiplomaticMessage] = []
+                    for idx, m in enumerate(parsed.get("messages", [])):
+                        content = m.get("content", "").strip()
+                        if content:
+                            msgs.append(
+                                DiplomaticMessage(
+                                    message_id=f"msg_{nation.id}_{obs.turn}_{idx+1}",
+                                    turn=obs.turn,
+                                    sender_id=nation.id,
+                                    recipient_id=m.get("recipient_id"),
+                                    is_private=bool(m.get("is_private", False)),
+                                    content=content,
+                                    timestamp=self._now_iso(),
+                                )
+                            )
+                    return msgs
         except Exception:
-            # Fallback smoothly without crashing simulation
             pass
         return await self.fallback.generate_diplomacy(obs)
 
     async def generate_decision(self, obs: AgentObservation) -> AgentDecision:
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.get(f"{self.ollama_url}/api/tags")
+            nation = obs.nation
+            personality_guide = self._get_personality_guidance()
+
+            owned_tids = set(nation.territory_ids)
+            known_map = {t.id: t for t in obs.known_territories}
+
+            adjacent_neutral = []
+            adjacent_enemy = []
+            for tid in owned_tids:
+                terr = known_map.get(tid)
+                if terr:
+                    for adj_id in terr.adjacent_territory_ids:
+                        adj_terr = known_map.get(adj_id)
+                        if adj_terr:
+                            if adj_terr.owner_id is None and adj_id not in adjacent_neutral:
+                                adjacent_neutral.append(adj_id)
+                            elif adj_terr.owner_id and adj_terr.owner_id != nation.id and adj_id not in adjacent_enemy:
+                                adjacent_enemy.append(f"{adj_id} (owned by {adj_terr.owner_id})")
+
+            prompt = f"""{personality_guide}
+
+STRATEGIC DECISION PHASE (Turn {obs.turn}):
+You are {self.leader_name}, leader of {nation.name}.
+Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Military Units.
+Controlled Territories: {', '.join(owned_tids)}.
+Adjacent Neutral Territories (can be claimed): {', '.join(adjacent_neutral) if adjacent_neutral else 'None'}.
+Adjacent Enemy Territories (can be attacked): {', '.join(adjacent_enemy) if adjacent_enemy else 'None'}.
+
+ACTION RULES:
+- "claim": Costs 20 gold, 10 food. Target MUST be an adjacent neutral territory ID.
+- "recruit": Costs 20 gold, 10 food. Adds 5 soldiers to an owned territory.
+- "develop": Costs 30 gold. Increases yield of an owned territory. develop_target must be "gold" or "food".
+- "move": Move soldiers between adjacent owned territories.
+- "attack": Attack an adjacent enemy territory.
+- "transfer": Transfer gold or food to another nation.
+- "pass": Do nothing to save resources.
+
+Respond with ONLY valid JSON adhering strictly to this schema:
+{{
+  "actions": [
+    {{
+      "action_type": "claim" or "recruit" or "develop" or "move" or "attack" or "transfer" or "pass",
+      "target_territory_id": "T01" or null,
+      "origin_territory_id": "T02" or null,
+      "target_nation_id": "nation_id" or null,
+      "units_count": 5 or null,
+      "develop_target": "gold" or "food" or null,
+      "reasoning_note": "Brief strategic reasoning"
+    }}
+  ],
+  "strategy_note": "Summary of doctrine this turn"
+}}
+"""
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                res = await client.post(
+                    f"{self.ollama_url}/api/generate",
+                    json={
+                        "model": self.model_name,
+                        "prompt": prompt,
+                        "stream": False,
+                        "format": "json"
+                    }
+                )
                 if res.status_code == 200:
-                    pass
+                    data = res.json()
+                    response_text = data.get("response", "{}")
+                    parsed = json.loads(response_text)
+                    raw_actions = parsed.get("actions", [])
+                    actions: List[GameAction] = []
+                    for idx, a in enumerate(raw_actions[:2]):
+                        atype = a.get("action_type", "pass")
+                        if atype not in ("claim", "recruit", "develop", "move", "attack", "transfer", "pass"):
+                            atype = "pass"
+                        actions.append(
+                            GameAction(
+                                action_id=f"act_{nation.id}_{obs.turn}_{idx+1}",
+                                nation_id=nation.id,
+                                action_type=atype,
+                                target_territory_id=a.get("target_territory_id"),
+                                origin_territory_id=a.get("origin_territory_id"),
+                                target_nation_id=a.get("target_nation_id"),
+                                units_count=a.get("units_count"),
+                                develop_target=a.get("develop_target"),
+                                reasoning_note=a.get("reasoning_note"),
+                            )
+                        )
+                    if not actions:
+                        actions.append(
+                            GameAction(
+                                action_id=f"act_{nation.id}_{obs.turn}_pass",
+                                nation_id=nation.id,
+                                action_type="pass",
+                                reasoning_note="Conserving resources.",
+                            )
+                        )
+                    return AgentDecision(
+                        nation_id=nation.id,
+                        turn=obs.turn,
+                        actions=actions[:2],
+                        outgoing_messages=[],
+                        strategy_note=parsed.get("strategy_note", f"AI {self.model_name} strategic plan"),
+                    )
         except Exception:
             pass
         return await self.fallback.generate_decision(obs)

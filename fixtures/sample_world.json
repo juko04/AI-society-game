@@ -680,5 +680,7 @@
     }
   },
   "is_paused": true,
-  "speed": 1.0
+  "speed": 1.0,
+  "active_thinking_nation_id": null,
+  "active_thinking_activity": null
 }

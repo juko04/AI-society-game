@@ -5,12 +5,14 @@ interface CivilizationListProps {
   nations: Nation[];
   selectedNationId: string | null;
   onSelectNation: (nationId: string) => void;
+  thinkingNationId?: string | null;
 }
 
 export const CivilizationList: React.FC<CivilizationListProps> = ({
   nations,
   selectedNationId,
   onSelectNation,
+  thinkingNationId,
 }) => {
   return (
     <div className="game-card">
@@ -25,14 +27,17 @@ export const CivilizationList: React.FC<CivilizationListProps> = ({
         <div className="kingdoms-list">
           {nations.map((nation) => {
             const isSelected = nation.id === selectedNationId;
+            const isThinking = nation.id === thinkingNationId;
             const upkeep = Math.ceil(nation.military_units / 4);
             const isStarving = nation.food < upkeep && nation.is_alive;
 
             return (
               <div
                 key={nation.id}
-                className={`kingdom-card ${isSelected ? 'selected' : ''} ${!nation.is_alive ? 'fallen' : ''}`}
-                style={{ borderColor: isSelected ? 'var(--color-gold)' : nation.color }}
+                className={`kingdom-card ${isSelected ? 'selected' : ''} ${isThinking ? 'thinking' : ''} ${!nation.is_alive ? 'fallen' : ''}`}
+                style={{
+                  borderColor: isThinking ? '#f59e0b' : isSelected ? 'var(--color-gold)' : nation.color,
+                }}
                 onClick={() => onSelectNation(nation.id)}
               >
                 <div className="kingdom-top-row">
@@ -57,7 +62,12 @@ export const CivilizationList: React.FC<CivilizationListProps> = ({
                     </div>
                   </div>
 
-                  <div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                    {isThinking && (
+                      <span className="kingdom-thinking-pill">
+                        🧠 Thinking
+                      </span>
+                    )}
                     {!nation.is_alive ? (
                       <span className="kingdom-personality-badge" style={{ color: '#f87171' }}>
                         💀 Defeated

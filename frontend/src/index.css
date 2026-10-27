@@ -278,6 +278,81 @@ body {
   background: #27354f;
 }
 
+/* AI Thinking Status Bar */
+.ai-thinking-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid #3b82f6;
+  border-radius: 12px;
+  padding: 0.35rem 0.85rem;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.35), inset 0 0 8px rgba(59, 130, 246, 0.15);
+  animation: banner-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes banner-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    border-color: rgba(96, 165, 250, 0.9);
+  }
+}
+
+.brain-pulse-icon {
+  font-size: 1.1rem;
+  display: inline-block;
+  animation: brain-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes brain-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #3b82f6); }
+  50% { transform: scale(1.22); filter: drop-shadow(0 0 8px #60a5fa); }
+}
+
+.thinking-nation-badge {
+  font-family: var(--font-game);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  border: 1.5px solid;
+  letter-spacing: 0.02em;
+}
+
+.thinking-activity-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 2px;
+  color: #60a5fa;
+  font-weight: 900;
+}
+
+.thinking-dots span {
+  animation: dot-pulse 1.4s infinite;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+
 /* Main Clean 3-Column Layout */
 .game-layout {
   display: grid;
@@ -378,6 +453,21 @@ body {
   filter: grayscale(0.8);
 }
 
+.kingdom-card.thinking {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.45) !important;
+  animation: card-thinking-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes card-thinking-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.75);
+  }
+}
+
 .kingdom-top-row {
   display: flex;
   align-items: center;
@@ -421,6 +511,17 @@ body {
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
   color: #cbd5e1;
+}
+
+.kingdom-thinking-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  animation: brain-pulse 1.2s ease-in-out infinite;
 }
 
 .kingdom-stats-row {

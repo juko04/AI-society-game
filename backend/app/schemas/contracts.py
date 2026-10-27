@@ -150,6 +150,8 @@ class WorldState(BaseModel):
     territories: Dict[str, Territory] = Field(description="Map of territory_id -> Territory")
     is_paused: bool = Field(default=True, description="Whether simulation is currently running")
     speed: float = Field(default=1.0, description="Speed multiplier (0.5x, 1x, 2x)")
+    active_thinking_nation_id: Optional[str] = Field(default=None, description="Nation ID currently executing AI inference")
+    active_thinking_activity: Optional[str] = Field(default=None, description="Description of active AI thought")
 
 
 class AgentObservation(BaseModel):

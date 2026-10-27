@@ -433,6 +433,32 @@
           "description": "Speed multiplier (0.5x, 1x, 2x)",
           "title": "Speed",
           "type": "number"
+        },
+        "active_thinking_nation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Nation ID currently executing AI inference",
+          "title": "Active Thinking Nation Id"
+        },
+        "active_thinking_activity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Description of active AI thought",
+          "title": "Active Thinking Activity"
         }
       },
       "required": [

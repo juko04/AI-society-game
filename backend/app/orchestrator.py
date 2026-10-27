@@ -132,6 +132,8 @@ class SimulationOrchestrator:
         phase = self.world.phase
 
         if phase == "world_update":
+            self.world.active_thinking_nation_id = None
+            self.world.active_thinking_activity = "Calculating resource yields and army food upkeep..."
             events = self.engine.process_phase_world_update()
             self.world.phase = "diplomacy"
 
@@ -141,6 +143,8 @@ class SimulationOrchestrator:
                 nation = self.world.nations.get(nation_id)
                 if not nation or not nation.is_alive:
                     continue
+                self.world.active_thinking_nation_id = nation_id
+                self.world.active_thinking_activity = f"{nation.name} ({nation.leader_name}) is formulating diplomatic messages..."
                 obs = self._build_observation(nation_id)
                 messages = await agent.generate_diplomacy(obs)
                 for msg in messages:
@@ -158,6 +162,8 @@ class SimulationOrchestrator:
                             timestamp=self._now_iso(),
                         )
                     )
+            self.world.active_thinking_nation_id = None
+            self.world.active_thinking_activity = None
             self.world.phase = "strategic_decisions"
 
         elif phase == "strategic_decisions":
@@ -167,15 +173,20 @@ class SimulationOrchestrator:
                 nation = self.world.nations.get(nation_id)
                 if not nation or not nation.is_alive:
                     continue
+                self.world.active_thinking_nation_id = nation_id
+                self.world.active_thinking_activity = f"{nation.name} ({nation.leader_name}) is deciding strategic moves..."
                 obs = self._build_observation(nation_id)
                 decision = await agent.generate_decision(obs)
                 all_actions.extend(decision.actions)
-                self.world.phase = "resolution"
-                # Store pending actions for resolution
-                self._pending_actions = all_actions
+            self.world.active_thinking_nation_id = None
+            self.world.active_thinking_activity = None
+            self._pending_actions = all_actions
+            self.world.phase = "resolution"
 
         elif phase == "resolution":
             # Phase 4: Resolution of actions and combat
+            self.world.active_thinking_nation_id = None
+            self.world.active_thinking_activity = "Resolving military movements, developments, and battles..."
             pending = getattr(self, "_pending_actions", [])
             events = self.engine.resolve_actions(pending)
             self._pending_actions = []
@@ -183,6 +194,8 @@ class SimulationOrchestrator:
 
         elif phase == "history_memory":
             # Phase 5: Snapshot & Memory decay
+            self.world.active_thinking_nation_id = None
+            self.world.active_thinking_activity = "Archiving turn history snapshot..."
             self.persistence.save_snapshot(
                 turn=self.world.turn,
                 phase=self.world.phase,
@@ -193,6 +206,7 @@ class SimulationOrchestrator:
             self.memory.apply_memory_decay(current_turn=self.world.turn)
             self.world.turn += 1
             self.world.phase = "world_update"
+            self.world.active_thinking_activity = None
 
         return events
 
