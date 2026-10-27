@@ -15,8 +15,8 @@ import {
   SimulationStepResponse,
 } from '../types/contracts';
 
-import sampleWorldFixture from '../../../fixtures/sample_world.json';
-import sampleEventsFixture from '../../../fixtures/sample_events.json';
+import sampleWorldFixture from '../fixtures/sample_world.json';
+import sampleEventsFixture from '../fixtures/sample_events.json';
 
 export interface TurnSnapshot {
   turn: number;

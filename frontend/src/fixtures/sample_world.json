@@ -1,0 +1,626 @@
+{
+  "simulation_id": "sim_genesis_001",
+  "turn": 1,
+  "phase": "world_update",
+  "seed": 42,
+  "nations": {
+    "nation_solaria": {
+      "id": "nation_solaria",
+      "name": "Solaria",
+      "color": "#F59E0B",
+      "leader_name": "Archon Vael",
+      "personality": "Opportunist",
+      "gold": 100,
+      "food": 60,
+      "military_units": 12,
+      "territory_ids": [
+        "T01",
+        "T02",
+        "T07"
+      ],
+      "current_goals": [
+        "Expand towards central valley",
+        "Accumulate gold reserve"
+      ],
+      "is_alive": true
+    },
+    "nation_borealis": {
+      "id": "nation_borealis",
+      "name": "Borealis",
+      "color": "#3B82F6",
+      "leader_name": "Premier Kaelen",
+      "personality": "Altruist",
+      "gold": 100,
+      "food": 60,
+      "military_units": 12,
+      "territory_ids": [
+        "T05",
+        "T06",
+        "T12"
+      ],
+      "current_goals": [
+        "Form mutual defense pact",
+        "Establish frontier granaries"
+      ],
+      "is_alive": true
+    },
+    "nation_viridia": {
+      "id": "nation_viridia",
+      "name": "Viridia",
+      "color": "#10B981",
+      "leader_name": "Matriarch Sylvan",
+      "personality": "Skeptic",
+      "gold": 100,
+      "food": 60,
+      "military_units": 12,
+      "territory_ids": [
+        "T32",
+        "T33",
+        "T34"
+      ],
+      "current_goals": [
+        "Fortify border passes",
+        "Control fertile southern plains"
+      ],
+      "is_alive": true
+    }
+  },
+  "territories": {
+    "T01": {
+      "id": "T01",
+      "name": "Sunken Valley",
+      "owner_id": "nation_solaria",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T07",
+        "T02"
+      ],
+      "coord_x": 12.0,
+      "coord_y": 12.0
+    },
+    "T02": {
+      "id": "T02",
+      "name": "Highland Pass",
+      "owner_id": "nation_solaria",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T08",
+        "T01",
+        "T03"
+      ],
+      "coord_x": 27.0,
+      "coord_y": 12.0
+    },
+    "T03": {
+      "id": "T03",
+      "name": "Amber Plains",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T09",
+        "T02",
+        "T04"
+      ],
+      "coord_x": 42.0,
+      "coord_y": 12.0
+    },
+    "T04": {
+      "id": "T04",
+      "name": "Whispering Woods",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T10",
+        "T03",
+        "T05"
+      ],
+      "coord_x": 57.0,
+      "coord_y": 12.0
+    },
+    "T05": {
+      "id": "T05",
+      "name": "Iron Crags",
+      "owner_id": "nation_borealis",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T11",
+        "T04",
+        "T06"
+      ],
+      "coord_x": 72.0,
+      "coord_y": 12.0
+    },
+    "T06": {
+      "id": "T06",
+      "name": "Misty Coast",
+      "owner_id": "nation_borealis",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T12",
+        "T05"
+      ],
+      "coord_x": 87.0,
+      "coord_y": 12.0
+    },
+    "T07": {
+      "id": "T07",
+      "name": "Golden Dunes",
+      "owner_id": "nation_solaria",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T01",
+        "T13",
+        "T08"
+      ],
+      "coord_x": 15.5,
+      "coord_y": 27.0
+    },
+    "T08": {
+      "id": "T08",
+      "name": "Azure Reach",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T02",
+        "T14",
+        "T07",
+        "T09"
+      ],
+      "coord_x": 30.5,
+      "coord_y": 27.0
+    },
+    "T09": {
+      "id": "T09",
+      "name": "Frost Peak",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T03",
+        "T15",
+        "T08",
+        "T10"
+      ],
+      "coord_x": 45.5,
+      "coord_y": 27.0
+    },
+    "T10": {
+      "id": "T10",
+      "name": "Shadow Mire",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T04",
+        "T16",
+        "T09",
+        "T11"
+      ],
+      "coord_x": 60.5,
+      "coord_y": 27.0
+    },
+    "T11": {
+      "id": "T11",
+      "name": "Silent Steppe",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T05",
+        "T17",
+        "T10",
+        "T12"
+      ],
+      "coord_x": 75.5,
+      "coord_y": 27.0
+    },
+    "T12": {
+      "id": "T12",
+      "name": "Dragon Ridge",
+      "owner_id": "nation_borealis",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T06",
+        "T18",
+        "T11"
+      ],
+      "coord_x": 90.5,
+      "coord_y": 27.0
+    },
+    "T13": {
+      "id": "T13",
+      "name": "Emerald Glade",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T07",
+        "T19",
+        "T14"
+      ],
+      "coord_x": 12.0,
+      "coord_y": 42.0
+    },
+    "T14": {
+      "id": "T14",
+      "name": "River Basin",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T08",
+        "T20",
+        "T13",
+        "T15"
+      ],
+      "coord_x": 27.0,
+      "coord_y": 42.0
+    },
+    "T15": {
+      "id": "T15",
+      "name": "Obsidian Hill",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T09",
+        "T21",
+        "T14",
+        "T16"
+      ],
+      "coord_x": 42.0,
+      "coord_y": 42.0
+    },
+    "T16": {
+      "id": "T16",
+      "name": "Crystal Shore",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T10",
+        "T22",
+        "T15",
+        "T17"
+      ],
+      "coord_x": 57.0,
+      "coord_y": 42.0
+    },
+    "T17": {
+      "id": "T17",
+      "name": "Sun Gate",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T11",
+        "T23",
+        "T16",
+        "T18"
+      ],
+      "coord_x": 72.0,
+      "coord_y": 42.0
+    },
+    "T18": {
+      "id": "T18",
+      "name": "Windward Bluff",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T12",
+        "T24",
+        "T17"
+      ],
+      "coord_x": 87.0,
+      "coord_y": 42.0
+    },
+    "T19": {
+      "id": "T19",
+      "name": "Ember Gorge",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T13",
+        "T25",
+        "T20"
+      ],
+      "coord_x": 15.5,
+      "coord_y": 57.0
+    },
+    "T20": {
+      "id": "T20",
+      "name": "Ash Wasteland",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T14",
+        "T26",
+        "T19",
+        "T21"
+      ],
+      "coord_x": 30.5,
+      "coord_y": 57.0
+    },
+    "T21": {
+      "id": "T21",
+      "name": "Bloodstone Fort",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T15",
+        "T27",
+        "T20",
+        "T22"
+      ],
+      "coord_x": 45.5,
+      "coord_y": 57.0
+    },
+    "T22": {
+      "id": "T22",
+      "name": "Gilded Delta",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T16",
+        "T28",
+        "T21",
+        "T23"
+      ],
+      "coord_x": 60.5,
+      "coord_y": 57.0
+    },
+    "T23": {
+      "id": "T23",
+      "name": "Sylvan Grove",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T17",
+        "T29",
+        "T22",
+        "T24"
+      ],
+      "coord_x": 75.5,
+      "coord_y": 57.0
+    },
+    "T24": {
+      "id": "T24",
+      "name": "Crown Mesa",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T18",
+        "T30",
+        "T23"
+      ],
+      "coord_x": 90.5,
+      "coord_y": 57.0
+    },
+    "T25": {
+      "id": "T25",
+      "name": "Cobalt Bay",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T19",
+        "T31",
+        "T26"
+      ],
+      "coord_x": 12.0,
+      "coord_y": 72.0
+    },
+    "T26": {
+      "id": "T26",
+      "name": "Starlight Spire",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T20",
+        "T32",
+        "T25",
+        "T27"
+      ],
+      "coord_x": 27.0,
+      "coord_y": 72.0
+    },
+    "T27": {
+      "id": "T27",
+      "name": "Velvet Moor",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T21",
+        "T33",
+        "T26",
+        "T28"
+      ],
+      "coord_x": 42.0,
+      "coord_y": 72.0
+    },
+    "T28": {
+      "id": "T28",
+      "name": "Grave Hollow",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T22",
+        "T34",
+        "T27",
+        "T29"
+      ],
+      "coord_x": 57.0,
+      "coord_y": 72.0
+    },
+    "T29": {
+      "id": "T29",
+      "name": "Thunder Valley",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T23",
+        "T35",
+        "T28",
+        "T30"
+      ],
+      "coord_x": 72.0,
+      "coord_y": 72.0
+    },
+    "T30": {
+      "id": "T30",
+      "name": "Copper Marsh",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T24",
+        "T36",
+        "T29"
+      ],
+      "coord_x": 87.0,
+      "coord_y": 72.0
+    },
+    "T31": {
+      "id": "T31",
+      "name": "Twilight Ridge",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T25",
+        "T32"
+      ],
+      "coord_x": 15.5,
+      "coord_y": 87.0
+    },
+    "T32": {
+      "id": "T32",
+      "name": "Pale Meadow",
+      "owner_id": "nation_viridia",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T26",
+        "T31",
+        "T33"
+      ],
+      "coord_x": 30.5,
+      "coord_y": 87.0
+    },
+    "T33": {
+      "id": "T33",
+      "name": "Dusk Cavern",
+      "owner_id": "nation_viridia",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T27",
+        "T32",
+        "T34"
+      ],
+      "coord_x": 45.5,
+      "coord_y": 87.0
+    },
+    "T34": {
+      "id": "T34",
+      "name": "Echoing Canyon",
+      "owner_id": "nation_viridia",
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 4,
+      "adjacent_territory_ids": [
+        "T28",
+        "T33",
+        "T35"
+      ],
+      "coord_x": 60.5,
+      "coord_y": 87.0
+    },
+    "T35": {
+      "id": "T35",
+      "name": "Storm Haven",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T29",
+        "T34",
+        "T36"
+      ],
+      "coord_x": 75.5,
+      "coord_y": 87.0
+    },
+    "T36": {
+      "id": "T36",
+      "name": "Final Bastion",
+      "owner_id": null,
+      "gold_production": 5,
+      "food_production": 4,
+      "stationed_military": 0,
+      "adjacent_territory_ids": [
+        "T30",
+        "T35"
+      ],
+      "coord_x": 90.5,
+      "coord_y": 87.0
+    }
+  },
+  "is_paused": true,
+  "speed": 1.0,
+  "active_thinking_nation_id": null,
+  "active_thinking_activity": null
+}

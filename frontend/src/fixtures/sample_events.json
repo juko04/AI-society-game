@@ -1,0 +1,18 @@
+[
+  {
+    "event_id": "evt_init_001",
+    "turn": 1,
+    "phase": "world_update",
+    "event_type": "world_update",
+    "summary": "Simulation initialized with 3 civilizations (Solaria, Borealis, Viridia) and 36 territories.",
+    "source_nation_id": null,
+    "target_nation_id": null,
+    "territory_id": null,
+    "details": {
+      "nations_count": 3,
+      "territories_count": 36,
+      "seed": 42
+    },
+    "timestamp": "2026-10-27T00:00:00+00:00"
+  }
+]

@@ -19,8 +19,8 @@ import { soundService } from './services/sound';
 import { WorldState, GameEvent } from './types/contracts';
 
 // Fallback fixtures
-import sampleWorldFixture from '../../fixtures/sample_world.json';
-import sampleEventsFixture from '../../fixtures/sample_events.json';
+import sampleWorldFixture from './fixtures/sample_world.json';
+import sampleEventsFixture from './fixtures/sample_events.json';
 
 export function App() {
   const [worldState, setWorldState] = useState<WorldState>(sampleWorldFixture as unknown as WorldState);
