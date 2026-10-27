@@ -44,6 +44,7 @@ class SimulationOrchestrator:
 
     def init_simulation(self) -> WorldState:
         """Initialize or reset the simulation state and instantiate agents."""
+        self.persistence = PersistenceManager()
         self.world = self.persistence.load_initial_world()
         self.engine = GameEngine(self.world)
         self.diplomacy = DiplomacyManager()

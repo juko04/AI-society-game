@@ -34,12 +34,15 @@ class PersistenceManager:
         else:
             raise FileNotFoundError(f"Fixture not found at {sample_world_path}")
 
-        # Also load initial events if present
+        # Also load initial events if present (resetting any past turn events)
         sample_events_path = self.fixtures_dir / "sample_events.json"
-        if sample_events_path.exists() and not self.events:
+        if sample_events_path.exists():
             with open(sample_events_path, "r", encoding="utf-8") as f:
                 events_data = json.load(f)
                 self.events = [GameEvent(**e) for e in events_data]
+        else:
+            self.events = []
+        self.snapshots.clear()
 
         return self.active_world
 

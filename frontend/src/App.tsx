@@ -217,7 +217,12 @@ export function App() {
     try {
       const freshState = await resetSimulation('standard', isConnected);
       setWorldState(freshState);
-      setEvents(offlineEngine.getEvents(100));
+      if (isConnected) {
+        const freshEvents = await fetchEvents(100);
+        setEvents(freshEvents);
+      } else {
+        setEvents(offlineEngine.getEvents(100));
+      }
       setSelectedNationId(null);
       setSelectedTerritoryId(null);
       setActiveCombatEvent(null);
