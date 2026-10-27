@@ -21,6 +21,7 @@ router = APIRouter()
 
 class StepRequest(BaseModel):
     full_turn: bool = False
+    stage: Optional[str] = None
 
 
 class PauseRequest(BaseModel):
@@ -89,8 +90,8 @@ async def list_messages(
 
 @router.post("/simulation/step", response_model=SimulationStepResponse)
 async def step_simulation(request: StepRequest = StepRequest(full_turn=False)):
-    """Advance the simulation by one phase or a full 5-phase turn."""
-    return await orchestrator.step(full_turn=request.full_turn)
+    """Advance the simulation by one phase, a stage, or a full 5-phase turn."""
+    return await orchestrator.step(full_turn=request.full_turn, stage=request.stage)
 
 
 @router.post("/simulation/reset", response_model=WorldState)

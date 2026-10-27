@@ -87,13 +87,17 @@ export async function fetchMessages(limit = 100): Promise<DiplomaticMessage[]> {
   return offlineEngine.getMessages(limit);
 }
 
-export async function stepSimulation(fullTurn = false, isConnected = false): Promise<SimulationStepResponse> {
+export async function stepSimulation(
+  fullTurn = false,
+  isConnected = false,
+  stage?: 'diplomacy' | 'resolution'
+): Promise<SimulationStepResponse> {
   if (isConnected) {
     try {
       const res = await fetch(`${API_BASE_URL}/simulation/step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_turn: fullTurn }),
+        body: JSON.stringify({ full_turn: fullTurn, stage }),
       });
       if (res.ok) {
         return await res.json();
@@ -102,7 +106,7 @@ export async function stepSimulation(fullTurn = false, isConnected = false): Pro
       console.warn('Backend step failed, falling back to offline engine', e);
     }
   }
-  return offlineEngine.step(fullTurn);
+  return offlineEngine.step(fullTurn, stage);
 }
 
 export async function resetSimulation(scenario: 'standard' | 'triad' = 'standard', isConnected = false): Promise<WorldState> {

@@ -99,15 +99,34 @@ class SimulationOrchestrator:
             available_actions=["claim", "recruit", "develop", "move", "attack", "transfer", "pass"],
         )
 
-    async def step(self, full_turn: bool = False) -> SimulationStepResponse:
-        """Advance the simulation by one phase, or execute all phases for a full turn."""
+    async def step(self, full_turn: bool = False, stage: Optional[str] = None) -> SimulationStepResponse:
+        """Advance the simulation by one phase, by stage ('diplomacy' | 'resolution'), or a full turn."""
         if not self.world or not self.engine:
             self.init_simulation()
 
         initial_phase = self.world.phase
         new_events: List[GameEvent] = []
 
-        if full_turn:
+        if stage == "diplomacy":
+            # Stage 1: Yields / Upkeep then Diplomatic Announcements
+            if self.world.phase == "world_update":
+                evts = await self._step_single_phase()
+                new_events.extend(evts)
+            if self.world.phase == "diplomacy":
+                evts = await self._step_single_phase()
+                new_events.extend(evts)
+        elif stage == "resolution":
+            # Stage 2: Strategic Actions, Board Movements/Combat, and History Snapshot
+            if self.world.phase == "strategic_decisions":
+                evts = await self._step_single_phase()
+                new_events.extend(evts)
+            if self.world.phase == "resolution":
+                evts = await self._step_single_phase()
+                new_events.extend(evts)
+            if self.world.phase == "history_memory":
+                evts = await self._step_single_phase()
+                new_events.extend(evts)
+        elif full_turn:
             # Execute entire 5-phase turn cycle
             for _ in range(5):
                 phase_events = await self._step_single_phase()

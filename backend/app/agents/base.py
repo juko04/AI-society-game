@@ -231,6 +231,8 @@ class OllamaAgentAdapter(BaseAgent):
 
     Sends structured prompts with format="json", enforces valid action schemas,
     and includes graceful fallback to MockScriptedAgent if the Ollama endpoint is offline.
+    Combines diplomacy and strategic planning in a unified prompt with a strict brevity
+    and token limit for lightning-fast execution on Apple Silicon.
     """
 
     def __init__(
@@ -245,6 +247,8 @@ class OllamaAgentAdapter(BaseAgent):
         self.ollama_url = ollama_url
         self.model_name = model_name
         self.fallback = MockScriptedAgent(nation_id, leader_name, personality)
+        self._cached_decision: Optional[AgentDecision] = None
+        self._cached_decision_turn: Optional[int] = None
 
     def _now_iso(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -257,67 +261,6 @@ class OllamaAgentAdapter(BaseAgent):
             return f"You are {self.leader_name}, ruler of your nation. Your personality archetype is: {self.personality}."
 
     async def generate_diplomacy(self, obs: AgentObservation) -> List[DiplomaticMessage]:
-        try:
-            nation = obs.nation
-            personality_guide = self._get_personality_guidance()
-
-            prompt = f"""{personality_guide}
-
-CURRENT SIMULATION STATE (Turn {obs.turn}):
-- You are {self.leader_name}, leader of {nation.name}.
-- Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Soldiers.
-- Controlled territories: {', '.join(nation.territory_ids)}.
-- High-level goals: {', '.join(obs.current_goals)}.
-
-DIPLOMATIC PHASE:
-You may broadcast a statement to all nations or send a private diplomatic message to a rival.
-Respond with ONLY valid JSON adhering strictly to this schema:
-{{
-  "messages": [
-    {{
-      "recipient_id": "nation_id" or null for public broadcast,
-      "is_private": false,
-      "content": "Your statement or proposal here"
-    }}
-  ]
-}}
-If you choose not to speak this turn, return {{"messages": []}}.
-"""
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                res = await client.post(
-                    f"{self.ollama_url}/api/generate",
-                    json={
-                        "model": self.model_name,
-                        "prompt": prompt,
-                        "stream": False,
-                        "format": "json"
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    response_text = data.get("response", "{}")
-                    parsed = json.loads(response_text)
-                    msgs: List[DiplomaticMessage] = []
-                    for idx, m in enumerate(parsed.get("messages", [])):
-                        content = m.get("content", "").strip()
-                        if content:
-                            msgs.append(
-                                DiplomaticMessage(
-                                    message_id=f"msg_{nation.id}_{obs.turn}_{idx+1}",
-                                    turn=obs.turn,
-                                    sender_id=nation.id,
-                                    recipient_id=m.get("recipient_id"),
-                                    is_private=bool(m.get("is_private", False)),
-                                    content=content,
-                                    timestamp=self._now_iso(),
-                                )
-                            )
-                    return msgs
-        except Exception:
-            pass
-        return await self.fallback.generate_diplomacy(obs)
-
-    async def generate_decision(self, obs: AgentObservation) -> AgentDecision:
         try:
             nation = obs.nation
             personality_guide = self._get_personality_guidance()
@@ -336,56 +279,61 @@ If you choose not to speak this turn, return {{"messages": []}}.
                             if adj_terr.owner_id is None and adj_id not in adjacent_neutral:
                                 adjacent_neutral.append(adj_id)
                             elif adj_terr.owner_id and adj_terr.owner_id != nation.id and adj_id not in adjacent_enemy:
-                                adjacent_enemy.append(f"{adj_id} (owned by {adj_terr.owner_id})")
+                                adjacent_enemy.append(f"{adj_id} ({adj_terr.owner_id})")
 
             prompt = f"""{personality_guide}
 
-STRATEGIC DECISION PHASE (Turn {obs.turn}):
-You are {self.leader_name}, leader of {nation.name}.
-Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Military Units.
-Controlled Territories: {', '.join(owned_tids)}.
-Adjacent Neutral Territories (can be claimed): {', '.join(adjacent_neutral) if adjacent_neutral else 'None'}.
-Adjacent Enemy Territories (can be attacked): {', '.join(adjacent_enemy) if adjacent_enemy else 'None'}.
+TURN {obs.turn} FOR {nation.name} ({self.leader_name}):
+- Treasury: {nation.gold} Gold, {nation.food} Food, {nation.military_units} Soldiers.
+- Territories: {', '.join(owned_tids)}.
+- Adjacent neutral (can claim): {', '.join(adjacent_neutral) if adjacent_neutral else 'None'}.
+- Adjacent enemy (can attack): {', '.join(adjacent_enemy) if adjacent_enemy else 'None'}.
 
-ACTION RULES:
-- "claim": Costs 20 gold, 10 food. Target MUST be an adjacent neutral territory ID.
-- "recruit": Costs 20 gold, 10 food. Adds 5 soldiers to an owned territory.
-- "develop": Costs 30 gold. Increases yield of an owned territory. develop_target must be "gold" or "food".
-- "move": Move soldiers between adjacent owned territories.
-- "attack": Attack an adjacent enemy territory.
-- "transfer": Transfer gold or food to another nation.
-- "pass": Do nothing to save resources.
+RULES:
+- "claim": Costs 20 gold, 10 food. Target MUST be adjacent neutral territory ID.
+- "recruit": Costs 20 gold, 10 food. Adds 5 soldiers to owned territory.
+- "develop": Costs 30 gold. Increases yield of owned territory. develop_target: "gold" or "food".
+- "attack": Target adjacent enemy territory.
+- "pass": Save resources.
+
+TASK:
+1. State 1 brief public proclamation or proposal (strictly under 18 words).
+2. Choose 1 or 2 strategic actions.
 
 Respond with ONLY valid JSON adhering strictly to this schema:
 {{
+  "statement": "1 concise sentence under 18 words",
   "actions": [
     {{
-      "action_type": "claim" or "recruit" or "develop" or "move" or "attack" or "transfer" or "pass",
+      "action_type": "claim" | "recruit" | "develop" | "move" | "attack" | "pass",
       "target_territory_id": "T01" or null,
-      "origin_territory_id": "T02" or null,
-      "target_nation_id": "nation_id" or null,
-      "units_count": 5 or null,
       "develop_target": "gold" or "food" or null,
-      "reasoning_note": "Brief strategic reasoning"
+      "reasoning_note": "Brief reasoning"
     }}
-  ],
-  "strategy_note": "Summary of doctrine this turn"
+  ]
 }}
 """
-            async with httpx.AsyncClient(timeout=20.0) as client:
+            async with httpx.AsyncClient(timeout=4.0) as client:
                 res = await client.post(
                     f"{self.ollama_url}/api/generate",
                     json={
                         "model": self.model_name,
                         "prompt": prompt,
                         "stream": False,
-                        "format": "json"
+                        "format": "json",
+                        "options": {
+                            "num_predict": 85,
+                            "temperature": 0.5,
+                        }
                     }
                 )
                 if res.status_code == 200:
                     data = res.json()
                     response_text = data.get("response", "{}")
                     parsed = json.loads(response_text)
+                    statement = parsed.get("statement", "").strip()
+
+                    # Cache decision for Phase 3 (instant zero-delay retrieval)
                     raw_actions = parsed.get("actions", [])
                     actions: List[GameAction] = []
                     for idx, a in enumerate(raw_actions[:2]):
@@ -402,7 +350,7 @@ Respond with ONLY valid JSON adhering strictly to this schema:
                                 target_nation_id=a.get("target_nation_id"),
                                 units_count=a.get("units_count"),
                                 develop_target=a.get("develop_target"),
-                                reasoning_note=a.get("reasoning_note"),
+                                reasoning_note=a.get("reasoning_note", "Strategic doctrine"),
                             )
                         )
                     if not actions:
@@ -414,13 +362,36 @@ Respond with ONLY valid JSON adhering strictly to this schema:
                                 reasoning_note="Conserving resources.",
                             )
                         )
-                    return AgentDecision(
+                    self._cached_decision = AgentDecision(
                         nation_id=nation.id,
                         turn=obs.turn,
                         actions=actions[:2],
                         outgoing_messages=[],
-                        strategy_note=parsed.get("strategy_note", f"AI {self.model_name} strategic plan"),
+                        strategy_note=statement or f"AI {self.model_name} strategic plan",
                     )
+                    self._cached_decision_turn = obs.turn
+
+                    if statement:
+                        return [
+                            DiplomaticMessage(
+                                message_id=f"msg_{nation.id}_{obs.turn}_1",
+                                turn=obs.turn,
+                                sender_id=nation.id,
+                                recipient_id=None,
+                                is_private=False,
+                                content=statement,
+                                timestamp=self._now_iso(),
+                            )
+                        ]
+                    return []
         except Exception:
             pass
+        return await self.fallback.generate_diplomacy(obs)
+
+    async def generate_decision(self, obs: AgentObservation) -> AgentDecision:
+        if getattr(self, "_cached_decision_turn", None) == obs.turn and self._cached_decision:
+            decision = self._cached_decision
+            self._cached_decision = None
+            self._cached_decision_turn = None
+            return decision
         return await self.fallback.generate_decision(obs)

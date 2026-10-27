@@ -138,11 +138,28 @@ export class OfflineSimulationEngine {
     }
   }
 
-  public step(fullTurn = false): SimulationStepResponse {
+  public step(fullTurn = false, stage?: 'diplomacy' | 'resolution'): SimulationStepResponse {
     const prevPhase = this.world.phase;
     const newEvents: GameEvent[] = [];
 
-    if (fullTurn) {
+    if (stage === 'diplomacy') {
+      if (this.world.phase === 'world_update') {
+        newEvents.push(...this.stepSinglePhase());
+      }
+      if (this.world.phase === 'diplomacy') {
+        newEvents.push(...this.stepSinglePhase());
+      }
+    } else if (stage === 'resolution') {
+      if (this.world.phase === 'strategic_decisions') {
+        newEvents.push(...this.stepSinglePhase());
+      }
+      if (this.world.phase === 'resolution') {
+        newEvents.push(...this.stepSinglePhase());
+      }
+      if (this.world.phase === 'history_memory') {
+        newEvents.push(...this.stepSinglePhase());
+      }
+    } else if (fullTurn) {
       for (let i = 0; i < 5; i++) {
         const evts = this.stepSinglePhase();
         newEvents.push(...evts);

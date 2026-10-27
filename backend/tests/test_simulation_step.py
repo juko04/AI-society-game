@@ -28,3 +28,24 @@ async def test_step_simulation_full_turn(client: AsyncClient):
     events_res = await client.get("/api/events")
     assert events_res.status_code == 200
     assert len(events_res.json()) > 0
+
+
+@pytest.mark.asyncio
+async def test_step_simulation_stages(client: AsyncClient):
+    # Reset simulation first
+    await client.post("/api/simulation/reset")
+
+    # Step diplomacy stage
+    res1 = await client.post("/api/simulation/step", json={"stage": "diplomacy"})
+    assert res1.status_code == 200
+    data1 = res1.json()
+    assert data1["status"] == "success"
+    assert data1["current_phase"] == "strategic_decisions"
+
+    # Step resolution stage
+    res2 = await client.post("/api/simulation/step", json={"stage": "resolution"})
+    assert res2.status_code == 200
+    data2 = res2.json()
+    assert data2["status"] == "success"
+    assert data2["current_phase"] == "world_update"
+    assert data2["current_turn"] == 2
