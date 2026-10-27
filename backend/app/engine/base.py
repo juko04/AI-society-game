@@ -52,7 +52,7 @@ class GameEngine:
             nation.gold += gold_gain
             nation.food += food_gain
 
-            # 2. Army food upkeep: 1 food per 4 units rounded up
+            # 2. Army Upkeep: Troops require BOTH food rations AND gold wages
             total_units = sum(
                 self.world.territories[tid].stationed_military
                 for tid in nation.territory_ids
@@ -60,29 +60,56 @@ class GameEngine:
             )
             nation.military_units = total_units
 
-            upkeep = math.ceil(total_units / 4.0) if total_units > 0 else 0
-            
-            if nation.food >= upkeep:
-                nation.food -= upkeep
+            food_upkeep = math.ceil(total_units / 3.0) if total_units > 0 else 0
+            gold_upkeep = math.ceil(total_units / 3.0) if total_units > 0 else 0
+
+            # Process Food Upkeep
+            if nation.food >= food_upkeep:
+                nation.food -= food_upkeep
             else:
-                # Food shortage / attrition
-                deficit = upkeep - nation.food
+                deficit = food_upkeep - nation.food
                 nation.food = 0
                 attrition_units = min(deficit * 2, total_units)
                 if attrition_units > 0:
                     self._apply_attrition(nation, attrition_units)
+                    total_units = max(0, total_units - attrition_units)
                     events.append(
                         GameEvent(
-                            event_id=f"evt_attr_{self.world.turn}_{nation_id}",
+                            event_id=f"evt_attr_food_{self.world.turn}_{nation_id}",
                             turn=self.world.turn,
                             phase="world_update",
                             event_type="attrition",
-                            summary=f"{nation.name} suffered a food shortage: {attrition_units} units lost to famine.",
+                            summary=f"🌾 Famine in {nation.name}: {attrition_units} units lost due to lack of food rations.",
                             source_nation_id=nation_id,
                             details={"food_deficit": deficit, "lost_units": attrition_units},
                             timestamp=self._now_iso(),
                         )
                     )
+
+            # Process Gold Upkeep (military pay / wages)
+            if nation.gold >= gold_upkeep:
+                nation.gold -= gold_upkeep
+            else:
+                gold_deficit = gold_upkeep - nation.gold
+                nation.gold = 0
+                desertion_units = min(gold_deficit * 2, total_units)
+                if desertion_units > 0:
+                    self._apply_attrition(nation, desertion_units)
+                    total_units = max(0, total_units - desertion_units)
+                    events.append(
+                        GameEvent(
+                            event_id=f"evt_attr_gold_{self.world.turn}_{nation_id}",
+                            turn=self.world.turn,
+                            phase="world_update",
+                            event_type="attrition",
+                            summary=f"🪙 Mutiny in {nation.name}: {desertion_units} units deserted due to unpaid military wages.",
+                            source_nation_id=nation_id,
+                            details={"gold_deficit": gold_deficit, "lost_units": desertion_units},
+                            timestamp=self._now_iso(),
+                        )
+                    )
+
+            nation.military_units = total_units
 
         self.world.phase = "diplomacy"
         return events

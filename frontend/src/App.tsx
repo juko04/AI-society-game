@@ -12,6 +12,7 @@ import {
   fetchEvents,
   stepSimulation,
   resetSimulation,
+  updateNationPersonality,
 } from './services/api';
 import { offlineEngine } from './services/offlineEngine';
 import { soundService } from './services/sound';
@@ -206,11 +207,13 @@ export function App() {
     await playOneTurn();
   };
 
-  // Reset game
+  // Emergency Reset (always unfreezes and resets immediately)
   const handleReset = async () => {
-    if (isProcessing || isTurnRunningRef.current) return;
-    setIsProcessing(true);
+    isTurnRunningRef.current = false;
     setIsAutoPlaying(false);
+    setIsProcessing(false);
+    setThinkingNation(null);
+    setThinkingActivity(null);
     try {
       const freshState = await resetSimulation('standard', isConnected);
       setWorldState(freshState);
@@ -220,14 +223,44 @@ export function App() {
       setActiveCombatEvent(null);
     } catch (err) {
       console.error('Failed to reset:', err);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  // Auto-play toggle
+  // Auto-play toggle (immediate pause without getting stuck)
   const handleTogglePlay = () => {
-    setIsAutoPlaying((prev) => !prev);
+    setIsAutoPlaying((prev) => {
+      const next = !prev;
+      if (!next) {
+        // Immediate emergency pause
+        isTurnRunningRef.current = false;
+        setIsProcessing(false);
+        setThinkingNation(null);
+        setThinkingActivity(null);
+      }
+      return next;
+    });
+  };
+
+  // Change AI leader personality archetype in real-time
+  const handleUpdatePersonality = async (nationId: string, personality: string) => {
+    try {
+      await updateNationPersonality(nationId, personality, isConnected);
+      setWorldState((prev) => {
+        if (!prev.nations[nationId]) return prev;
+        return {
+          ...prev,
+          nations: {
+            ...prev.nations,
+            [nationId]: {
+              ...prev.nations[nationId],
+              personality,
+            },
+          },
+        };
+      });
+    } catch (err) {
+      console.error('Failed to update personality:', err);
+    }
   };
 
   // Chained Auto-Play Loop (advances turn-by-turn smoothly through observable stages)
@@ -314,6 +347,7 @@ export function App() {
           selectedNationId={selectedNationId}
           onSelectNation={(id) => setSelectedNationId(id === selectedNationId ? null : id)}
           thinkingNationId={thinkingNation?.id || null}
+          onUpdatePersonality={handleUpdatePersonality}
         />
 
         {/* Center: The Game Board (Vector Risk Map) */}

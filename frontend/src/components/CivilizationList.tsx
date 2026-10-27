@@ -6,6 +6,7 @@ interface CivilizationListProps {
   selectedNationId: string | null;
   onSelectNation: (nationId: string) => void;
   thinkingNationId?: string | null;
+  onUpdatePersonality?: (nationId: string, personality: string) => void;
 }
 
 export const CivilizationList: React.FC<CivilizationListProps> = ({
@@ -13,6 +14,7 @@ export const CivilizationList: React.FC<CivilizationListProps> = ({
   selectedNationId,
   onSelectNation,
   thinkingNationId,
+  onUpdatePersonality,
 }) => {
   return (
     <div className="game-card">
@@ -77,9 +79,24 @@ export const CivilizationList: React.FC<CivilizationListProps> = ({
                         ⚠️ Starving!
                       </span>
                     ) : (
-                      <span className="kingdom-personality-badge">
-                        {nation.personality || 'Neutral'}
-                      </span>
+                      <select
+                        value={nation.personality || 'Opportunist'}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (onUpdatePersonality) {
+                            onUpdatePersonality(nation.id, e.target.value);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="kingdom-personality-select"
+                        title="Change AI Leader Personality Archetype"
+                      >
+                        <option value="Opportunist">Opportunist 🦊</option>
+                        <option value="Altruist">Altruist 🕊️</option>
+                        <option value="Skeptic">Skeptic 🛡️</option>
+                        <option value="Aggressive">Aggressive ⚔️</option>
+                        <option value="Diplomatic">Diplomatic 📜</option>
+                      </select>
                     )}
                   </div>
                 </div>

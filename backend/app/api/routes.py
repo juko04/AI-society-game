@@ -28,6 +28,10 @@ class PauseRequest(BaseModel):
     is_paused: bool
 
 
+class PersonalityUpdateRequest(BaseModel):
+    personality: str
+
+
 @router.get("/health", response_model=HealthResponse)
 async def get_health():
     """Health status and current environment configuration."""
@@ -55,6 +59,15 @@ async def list_nations():
     """List all civilizations and their active states."""
     world = orchestrator.get_world_state()
     return list(world.nations.values())
+
+
+@router.post("/nations/{nation_id}/personality", response_model=Nation)
+async def update_nation_personality(nation_id: str, request: PersonalityUpdateRequest):
+    """Update a civilization's personality archetype and configure its agent adapter."""
+    updated = orchestrator.set_nation_personality(nation_id, request.personality)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Nation '{nation_id}' not found")
+    return updated
 
 
 @router.get("/territories", response_model=List[Territory])

@@ -13,7 +13,7 @@
       "territories_count": 36,
       "seed": 42
     },
-    "timestamp": "2026-10-27T00:09:21.685662+00:00"
+    "timestamp": "2026-10-27T00:51:46.753048+00:00"
   },
   {
     "event_id": "evt_002",
@@ -27,7 +27,7 @@
     "details": {
       "message": "Let us enrich our peoples rather than shed blood upon our borders."
     },
-    "timestamp": "2026-10-27T00:09:21.685662+00:00"
+    "timestamp": "2026-10-27T00:51:46.753048+00:00"
   },
   {
     "event_id": "evt_003",
@@ -42,7 +42,7 @@
       "cost_gold": 20,
       "cost_food": 10
     },
-    "timestamp": "2026-10-27T00:09:21.685662+00:00"
+    "timestamp": "2026-10-27T00:51:46.753048+00:00"
   },
   {
     "event_id": "evt_004",
@@ -58,6 +58,6 @@
       "cost_food": 10,
       "units_added": 5
     },
-    "timestamp": "2026-10-27T00:09:21.685662+00:00"
+    "timestamp": "2026-10-27T00:51:46.753048+00:00"
   }
 ]

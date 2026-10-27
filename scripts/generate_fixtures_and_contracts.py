@@ -52,10 +52,10 @@ def generate_json_schemas():
     print(f"Generated {len(models)} JSON schemas in {schemas_dir}")
 
 def generate_sample_world():
-    """Create a reproducible 36-territory world with 6 nations."""
+    """Create a reproducible 36-territory world with 3 nations in different corners."""
     random.seed(42)
     
-    # Define 6 nations with distinct themes & archetypes
+    # Define 3 core nations in distinct corners
     nations_data = [
         {
             "id": "nation_solaria",
@@ -66,8 +66,8 @@ def generate_sample_world():
             "gold": 100,
             "food": 60,
             "military_units": 12,
-            "territory_ids": ["T01", "T02", "T03"],
-            "current_goals": ["Secure western riverlands", "Accumulate gold reserve"],
+            "territory_ids": ["T01", "T02", "T07"],
+            "current_goals": ["Expand towards central valley", "Accumulate gold reserve"],
             "is_alive": True,
         },
         {
@@ -79,8 +79,8 @@ def generate_sample_world():
             "gold": 100,
             "food": 60,
             "military_units": 12,
-            "territory_ids": ["T07", "T08", "T09"],
-            "current_goals": ["Form mutual defense pact", "Establish northern granaries"],
+            "territory_ids": ["T05", "T06", "T12"],
+            "current_goals": ["Form mutual defense pact", "Establish frontier granaries"],
             "is_alive": True,
         },
         {
@@ -92,47 +92,8 @@ def generate_sample_world():
             "gold": 100,
             "food": 60,
             "military_units": 12,
-            "territory_ids": ["T13", "T14", "T15"],
-            "current_goals": ["Fortify border passes", "Verify neighbor claims"],
-            "is_alive": True,
-        },
-        {
-            "id": "nation_pyros",
-            "name": "Pyros",
-            "color": "#EF4444", # Red
-            "leader_name": "Warlord Ignis",
-            "personality": "Aggressive",
-            "gold": 100,
-            "food": 60,
-            "military_units": 12,
-            "territory_ids": ["T19", "T20", "T21"],
-            "current_goals": ["Expand towards central valley", "Double standing army"],
-            "is_alive": True,
-        },
-        {
-            "id": "nation_aethelgard",
-            "name": "Aethelgard",
-            "color": "#8B5CF6", # Purple
-            "leader_name": "Chancellor Morwen",
-            "personality": "Diplomatic",
-            "gold": 100,
-            "food": 60,
-            "military_units": 12,
-            "territory_ids": ["T25", "T26", "T27"],
-            "current_goals": ["Broker central non-aggression pact", "Trade surplus food for gold"],
-            "is_alive": True,
-        },
-        {
-            "id": "nation_umbra",
-            "name": "Umbra",
-            "color": "#64748B", # Slate
-            "leader_name": "Shadow Envoy Nyx",
-            "personality": "Cautious",
-            "gold": 100,
-            "food": 60,
-            "military_units": 12,
-            "territory_ids": ["T31", "T32", "T33"],
-            "current_goals": ["Observe troop movements", "Maintain buffer zone"],
+            "territory_ids": ["T32", "T33", "T34"],
+            "current_goals": ["Fortify border passes", "Control fertile southern plains"],
             "is_alive": True,
         },
     ]

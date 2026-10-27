@@ -124,3 +124,26 @@ export async function resetSimulation(scenario: 'standard' | 'triad' = 'standard
   }
   return offlineEngine.reset(scenario);
 }
+
+export async function updateNationPersonality(
+  nationId: string,
+  personality: string,
+  isConnected = false
+): Promise<Nation | null> {
+  if (isConnected) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/nations/${nationId}/personality`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personality }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Failed to update personality on backend:', e);
+    }
+  }
+  offlineEngine.setNationPersonality(nationId, personality);
+  return offlineEngine.getWorldState().nations[nationId] || null;
+}

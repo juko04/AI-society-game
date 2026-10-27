@@ -124,6 +124,13 @@ export class OfflineSimulationEngine {
     return this.getWorldState();
   }
 
+  public setNationPersonality(nationId: string, personality: string): WorldState {
+    if (this.world.nations[nationId]) {
+      this.world.nations[nationId].personality = personality;
+    }
+    return this.getWorldState();
+  }
+
   private recordSnapshot() {
     this.history.push({
       turn: this.world.turn,
@@ -208,22 +215,25 @@ export class OfflineSimulationEngine {
           nation.food += foodGain;
           nation.military_units = totalMilitary;
 
-          const upkeep = Math.ceil(totalMilitary / 4);
-          if (nation.food >= upkeep) {
-            nation.food -= upkeep;
+          // Troops require BOTH food rations AND gold wages
+          const foodUpkeep = Math.ceil(totalMilitary / 3);
+          const goldUpkeep = Math.ceil(totalMilitary / 3);
+
+          if (nation.food >= foodUpkeep) {
+            nation.food -= foodUpkeep;
           } else {
-            // Food deficit / famine attrition
-            const deficit = upkeep - nation.food;
+            const deficit = foodUpkeep - nation.food;
             nation.food = 0;
             const lostUnits = Math.min(deficit * 2, totalMilitary);
             if (lostUnits > 0) {
               this.applyAttrition(nation, lostUnits);
+              totalMilitary = Math.max(0, totalMilitary - lostUnits);
               events.push({
-                event_id: `evt_attr_${this.world.turn}_${nid}_${Date.now()}`,
+                event_id: `evt_attr_food_${this.world.turn}_${nid}_${Date.now()}`,
                 turn: this.world.turn,
                 phase: 'world_update',
                 event_type: 'attrition',
-                summary: `${nation.name} suffered a food shortage: ${lostUnits} military units lost to famine.`,
+                summary: `🌾 Famine in ${nation.name}: ${lostUnits} units lost due to empty food granaries.`,
                 source_nation_id: nid,
                 target_nation_id: null,
                 territory_id: null,
@@ -232,6 +242,32 @@ export class OfflineSimulationEngine {
               });
             }
           }
+
+          if (nation.gold >= goldUpkeep) {
+            nation.gold -= goldUpkeep;
+          } else {
+            const goldDeficit = goldUpkeep - nation.gold;
+            nation.gold = 0;
+            const desertedUnits = Math.min(goldDeficit * 2, totalMilitary);
+            if (desertedUnits > 0) {
+              this.applyAttrition(nation, desertedUnits);
+              totalMilitary = Math.max(0, totalMilitary - desertedUnits);
+              events.push({
+                event_id: `evt_attr_gold_${this.world.turn}_${nid}_${Date.now()}`,
+                turn: this.world.turn,
+                phase: 'world_update',
+                event_type: 'attrition',
+                summary: `🪙 Mutiny in ${nation.name}: ${desertedUnits} units deserted due to unpaid military wages.`,
+                source_nation_id: nid,
+                target_nation_id: null,
+                territory_id: null,
+                details: { goldDeficit, desertedUnits },
+                timestamp: this.nowIso(),
+              });
+            }
+          }
+
+          nation.military_units = totalMilitary;
         }
         this.world.phase = 'diplomacy';
         break;

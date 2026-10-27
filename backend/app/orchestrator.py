@@ -75,6 +75,18 @@ class SimulationOrchestrator:
             return self.init_simulation()
         return self.world
 
+    def set_nation_personality(self, nation_id: str, personality: str) -> Optional[Nation]:
+        """Update a nation's personality archetype and configure its agent adapter."""
+        if not self.world or nation_id not in self.world.nations:
+            return None
+        nation = self.world.nations[nation_id]
+        nation.personality = personality
+        if nation_id in self.agents:
+            self.agents[nation_id].personality = personality
+            if hasattr(self.agents[nation_id], "fallback"):
+                self.agents[nation_id].fallback.personality = personality
+        return nation
+
     def _build_observation(self, nation_id: str) -> AgentObservation:
         """Create sanitized observation filtered for a specific nation."""
         nation = self.world.nations[nation_id]

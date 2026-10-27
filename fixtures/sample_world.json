@@ -16,10 +16,10 @@
       "territory_ids": [
         "T01",
         "T02",
-        "T03"
+        "T07"
       ],
       "current_goals": [
-        "Secure western riverlands",
+        "Expand towards central valley",
         "Accumulate gold reserve"
       ],
       "is_alive": true
@@ -34,13 +34,13 @@
       "food": 60,
       "military_units": 12,
       "territory_ids": [
-        "T07",
-        "T08",
-        "T09"
+        "T05",
+        "T06",
+        "T12"
       ],
       "current_goals": [
         "Form mutual defense pact",
-        "Establish northern granaries"
+        "Establish frontier granaries"
       ],
       "is_alive": true
     },
@@ -54,73 +54,13 @@
       "food": 60,
       "military_units": 12,
       "territory_ids": [
-        "T13",
-        "T14",
-        "T15"
+        "T32",
+        "T33",
+        "T34"
       ],
       "current_goals": [
         "Fortify border passes",
-        "Verify neighbor claims"
-      ],
-      "is_alive": true
-    },
-    "nation_pyros": {
-      "id": "nation_pyros",
-      "name": "Pyros",
-      "color": "#EF4444",
-      "leader_name": "Warlord Ignis",
-      "personality": "Aggressive",
-      "gold": 100,
-      "food": 60,
-      "military_units": 12,
-      "territory_ids": [
-        "T19",
-        "T20",
-        "T21"
-      ],
-      "current_goals": [
-        "Expand towards central valley",
-        "Double standing army"
-      ],
-      "is_alive": true
-    },
-    "nation_aethelgard": {
-      "id": "nation_aethelgard",
-      "name": "Aethelgard",
-      "color": "#8B5CF6",
-      "leader_name": "Chancellor Morwen",
-      "personality": "Diplomatic",
-      "gold": 100,
-      "food": 60,
-      "military_units": 12,
-      "territory_ids": [
-        "T25",
-        "T26",
-        "T27"
-      ],
-      "current_goals": [
-        "Broker central non-aggression pact",
-        "Trade surplus food for gold"
-      ],
-      "is_alive": true
-    },
-    "nation_umbra": {
-      "id": "nation_umbra",
-      "name": "Umbra",
-      "color": "#64748B",
-      "leader_name": "Shadow Envoy Nyx",
-      "personality": "Cautious",
-      "gold": 100,
-      "food": 60,
-      "military_units": 12,
-      "territory_ids": [
-        "T31",
-        "T32",
-        "T33"
-      ],
-      "current_goals": [
-        "Observe troop movements",
-        "Maintain buffer zone"
+        "Control fertile southern plains"
       ],
       "is_alive": true
     }
@@ -158,10 +98,10 @@
     "T03": {
       "id": "T03",
       "name": "Amber Plains",
-      "owner_id": "nation_solaria",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T09",
         "T02",
@@ -188,10 +128,10 @@
     "T05": {
       "id": "T05",
       "name": "Iron Crags",
-      "owner_id": null,
+      "owner_id": "nation_borealis",
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 0,
+      "stationed_military": 4,
       "adjacent_territory_ids": [
         "T11",
         "T04",
@@ -203,10 +143,10 @@
     "T06": {
       "id": "T06",
       "name": "Misty Coast",
-      "owner_id": null,
+      "owner_id": "nation_borealis",
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 0,
+      "stationed_military": 4,
       "adjacent_territory_ids": [
         "T12",
         "T05"
@@ -217,7 +157,7 @@
     "T07": {
       "id": "T07",
       "name": "Golden Dunes",
-      "owner_id": "nation_borealis",
+      "owner_id": "nation_solaria",
       "gold_production": 5,
       "food_production": 4,
       "stationed_military": 4,
@@ -232,10 +172,10 @@
     "T08": {
       "id": "T08",
       "name": "Azure Reach",
-      "owner_id": "nation_borealis",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T02",
         "T14",
@@ -248,10 +188,10 @@
     "T09": {
       "id": "T09",
       "name": "Frost Peak",
-      "owner_id": "nation_borealis",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T03",
         "T15",
@@ -296,10 +236,10 @@
     "T12": {
       "id": "T12",
       "name": "Dragon Ridge",
-      "owner_id": null,
+      "owner_id": "nation_borealis",
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 0,
+      "stationed_military": 4,
       "adjacent_territory_ids": [
         "T06",
         "T18",
@@ -311,10 +251,10 @@
     "T13": {
       "id": "T13",
       "name": "Emerald Glade",
-      "owner_id": "nation_viridia",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T07",
         "T19",
@@ -326,10 +266,10 @@
     "T14": {
       "id": "T14",
       "name": "River Basin",
-      "owner_id": "nation_viridia",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T08",
         "T20",
@@ -342,10 +282,10 @@
     "T15": {
       "id": "T15",
       "name": "Obsidian Hill",
-      "owner_id": "nation_viridia",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T09",
         "T21",
@@ -405,10 +345,10 @@
     "T19": {
       "id": "T19",
       "name": "Ember Gorge",
-      "owner_id": "nation_pyros",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T13",
         "T25",
@@ -420,10 +360,10 @@
     "T20": {
       "id": "T20",
       "name": "Ash Wasteland",
-      "owner_id": "nation_pyros",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T14",
         "T26",
@@ -436,10 +376,10 @@
     "T21": {
       "id": "T21",
       "name": "Bloodstone Fort",
-      "owner_id": "nation_pyros",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T15",
         "T27",
@@ -499,10 +439,10 @@
     "T25": {
       "id": "T25",
       "name": "Cobalt Bay",
-      "owner_id": "nation_aethelgard",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T19",
         "T31",
@@ -514,10 +454,10 @@
     "T26": {
       "id": "T26",
       "name": "Starlight Spire",
-      "owner_id": "nation_aethelgard",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T20",
         "T32",
@@ -530,10 +470,10 @@
     "T27": {
       "id": "T27",
       "name": "Velvet Moor",
-      "owner_id": "nation_aethelgard",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T21",
         "T33",
@@ -593,10 +533,10 @@
     "T31": {
       "id": "T31",
       "name": "Twilight Ridge",
-      "owner_id": "nation_umbra",
+      "owner_id": null,
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 4,
+      "stationed_military": 0,
       "adjacent_territory_ids": [
         "T25",
         "T32"
@@ -607,7 +547,7 @@
     "T32": {
       "id": "T32",
       "name": "Pale Meadow",
-      "owner_id": "nation_umbra",
+      "owner_id": "nation_viridia",
       "gold_production": 5,
       "food_production": 4,
       "stationed_military": 4,
@@ -622,7 +562,7 @@
     "T33": {
       "id": "T33",
       "name": "Dusk Cavern",
-      "owner_id": "nation_umbra",
+      "owner_id": "nation_viridia",
       "gold_production": 5,
       "food_production": 4,
       "stationed_military": 4,
@@ -637,10 +577,10 @@
     "T34": {
       "id": "T34",
       "name": "Echoing Canyon",
-      "owner_id": null,
+      "owner_id": "nation_viridia",
       "gold_production": 5,
       "food_production": 4,
-      "stationed_military": 0,
+      "stationed_military": 4,
       "adjacent_territory_ids": [
         "T28",
         "T33",

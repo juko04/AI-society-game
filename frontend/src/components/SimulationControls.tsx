@@ -34,15 +34,14 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
   return (
     <div className="controls-bar">
       <div className="btn-group">
-        {/* Big 3D Play/Pause Button */}
+        {/* Big 3D Play/Pause Button - NEVER disabled so user can always pause if stuck */}
         <button
           className={`btn-game ${isPaused ? 'btn-play' : 'btn-pause'}`}
           onClick={() => {
             soundService.playClick();
             onTogglePlay();
           }}
-          disabled={isProcessing}
-          title="Press Spacebar to Play or Pause"
+          title={isPaused ? "Start Auto-Play (Space)" : "Pause Simulation Immediately (Space)"}
         >
           {isPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
           <span>{isPaused ? 'PLAY' : 'PAUSE'}</span>
@@ -76,15 +75,14 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
           <span>NEXT TURN</span>
         </button>
 
-        {/* Reset */}
+        {/* Reset - NEVER disabled so user can always recover from stalled states */}
         <button
           className="btn-game btn-reset"
           onClick={() => {
             soundService.playClick();
             onReset();
           }}
-          disabled={isProcessing}
-          title="Restart the game (R)"
+          title="Restart and unfreeze simulation (R)"
         >
           <RotateCcw size={15} />
           <span>RESET</span>
